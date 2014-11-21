@@ -33,9 +33,9 @@ public class Window implements Comparable<Window>
 			pair.one.getFace().color();
 		else
 			pair.two.getFace().color();
-			
+
 	}
-	
+
 	public Window(Halfedge<Point_3> h, double sigma, double b0, double b1, double d0, double d1)
 	{
 		assert(d0 < b1 - b0 + d1 + ExactAlgorithm.epsilon);
@@ -51,14 +51,14 @@ public class Window implements Comparable<Window>
 			pair.one.getFace().color();
 		else
 			pair.two.getFace().color();
-			
+
 	}
 
 	public void display()
 	{
 		System.out.println("Window of edge "+pair.one.index+" : { sigma="+sigma+", b0="+b0+", b1="+b1+", d0="+d0+", d1="+d1+" , tau="+tau+" }");
 	}
-	
+
 
 
 	private class OverlapData {
@@ -126,32 +126,32 @@ public class Window implements Comparable<Window>
 		}
 		assert(data.delta0 < data.delta1 + ExactAlgorithm.epsilon);
 
-//		//Computing the distance to the source of the window intersection bounds
-//		double oMin, oMax, wMin, wMax;
-//		//Checking whether the source is on the left, between or on the right of the bounds
-//		if (o_sx < data.delta0 + ExactAlgorithm.epsilon)
-//			oMin = data.oD0;
-//		else if (data.delta1 < o_sx + ExactAlgorithm.epsilon)
-//			oMin = data.oD1;
-//		else
-//			oMin = o_sy;
-//		oMax = Math.max(data.oD0, data.oD1);
-//		if (w_sx < data.delta0 + ExactAlgorithm.epsilon)
-//			wMin = data.wD0;
-//		else if (data.delta1 < w_sx + ExactAlgorithm.epsilon)
-//			wMin = data.wD1;
-//		else
-//			wMin = w_sy;
-//		wMax = Math.max(data.wD0, data.wD1);
-//
-//		//Checking whether there is a full cut
-//		if(oMax <= wMin + ExactAlgorithm.epsilon)
-//			return 1;
-//		else if (wMax <= oMin + ExactAlgorithm.epsilon)
-//			return -1;
-//		else
-//			return 0;
-		
+		//		//Computing the distance to the source of the window intersection bounds
+		//		double oMin, oMax, wMin, wMax;
+		//		//Checking whether the source is on the left, between or on the right of the bounds
+		//		if (o_sx < data.delta0 + ExactAlgorithm.epsilon)
+		//			oMin = data.oD0;
+		//		else if (data.delta1 < o_sx + ExactAlgorithm.epsilon)
+		//			oMin = data.oD1;
+		//		else
+		//			oMin = o_sy;
+		//		oMax = Math.max(data.oD0, data.oD1);
+		//		if (w_sx < data.delta0 + ExactAlgorithm.epsilon)
+		//			wMin = data.wD0;
+		//		else if (data.delta1 < w_sx + ExactAlgorithm.epsilon)
+		//			wMin = data.wD1;
+		//		else
+		//			wMin = w_sy;
+		//		wMax = Math.max(data.wD0, data.wD1);
+		//
+		//		//Checking whether there is a full cut
+		//		if(oMax <= wMin + ExactAlgorithm.epsilon)
+		//			return 1;
+		//		else if (wMax <= oMin + ExactAlgorithm.epsilon)
+		//			return -1;
+		//		else
+		//			return 0;
+
 		if (data.oD0 < data.wD0 + ExactAlgorithm.epsilon && data.oD1 < data.wD1 + ExactAlgorithm.epsilon)
 			return 1;
 		if (data.wD0 < data.oD0 + ExactAlgorithm.epsilon && data.wD1 < data.oD1 + ExactAlgorithm.epsilon)
@@ -239,20 +239,56 @@ public class Window implements Comparable<Window>
 			double oDp = Math.sqrt(data.o_s.y*data.o_s.y + (data.o_s.x - p)*(data.o_s.x - p));
 			double wDp = Math.sqrt(data.w_s.y*data.w_s.y + (data.w_s.x - p)*(data.w_s.x - p));
 			assert(Math.abs(oDp - wDp) < ExactAlgorithm.epsilon);
-			if (Math.abs(data.delta0 - b0) < ExactAlgorithm.epsilon) {
-				//assert(Math.abs(data.delta1-w.b1) < ExactAlgorithm.epsilon); wrong assumption (an edge border for example)
+
+			if (data.wD0 < data.oD0 + ExactAlgorithm.epsilon) { //Argument better on the left of p
+				assert(data.oD1 < data.wD1 + ExactAlgorithm.epsilon);
+				if (b0 < data.delta0 - ExactAlgorithm.epsilon) { //Object goes further than argument on the left, double cut
+					Window left = new Window(pair, sigma, b0, w.b0, d0, data.oD0, tau);
+					pair.addWindowLater(left);
+				}
+				if (w.b1 > data.delta1 + ExactAlgorithm.epsilon) {
+					Window right = new Window(w.pair, w.sigma, b1, w.b1, data.wD1, w.d1, w.tau);
+					pair.addWindowLater(right);
+				}
 				b0 = p;
 				d0 = oDp;
 				w.b1 = p;
 				w.d1 = wDp;
-			} else if (Math.abs(data.delta0 - w.b0) < ExactAlgorithm.epsilon){
-				//assert(Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon); wrong assumption
-				w.b0 = p;
-				w.d0 = wDp;
+				return 0;
+			} else { assert(data.wD1 < data.oD1 + ExactAlgorithm.epsilon); //Argument better on the right of p
+				if (w.b0 < data.delta0 - ExactAlgorithm.epsilon) {
+					Window left = new Window(w.pair, w.sigma, w.b0, data.delta0, w.d0, data.wD0, w.tau);
+					pair.addWindowLater(left);					
+				}
+				if (b1 > data.delta1 + ExactAlgorithm.epsilon) {
+					Window right = new Window(pair, sigma, data.delta1, b1, data.oD1, d1, tau);
+					pair.addWindowLater(right);
+				}
 				b1 = p;
 				d1 = oDp;
+				w.b0 = p;
+				w.d0 = wDp;
+				return 0;
 			}
-			return 0;
+
+//			if (Math.abs(data.delta0 - b0) < ExactAlgorithm.epsilon) {
+//				if(Math.abs(data.delta1-w.b1) < ExactAlgorithm.epsilon) {
+//					b0 = p;
+//					d0 = oDp;
+//					w.b1 = p;
+//					w.d1 = wDp;
+//				}
+//				else {
+//	
+//				}
+//			} else if (Math.abs(data.delta0 - w.b0) < ExactAlgorithm.epsilon){
+//				//assert(Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon); wrong assumption
+//				w.b0 = p;
+//				w.d0 = wDp;
+//				b1 = p;
+//				d1 = oDp;
+//			} else
+//				return 0;
 		}
 	}
 
@@ -311,13 +347,13 @@ public class Window implements Comparable<Window>
 	{
 		return (new Double(Math.min(d0, d1) + sigma));
 	}
-	
+
 	@Override
 	public int hashCode()
 	{
 		return (new Double(distance())).hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object o)
 	{
@@ -326,41 +362,46 @@ public class Window implements Comparable<Window>
 		Window w = (Window) o;
 		return new Double(distance()).equals(w.distance());
 	}
-	
+
 	@Override
 	public int compareTo(Window w)
 	{
 		return new Double(distance()).compareTo(w.distance());
 	}
+	
+	
+	
+	
+	
 
-//	public Window findWindow(double x)
-//	{
-//		if (x<b0 || x>b1)
-//			throw new RuntimeException();
-//		Point_2 b0Point = new Point_2(b0,0);
-//		Point_2 b1Point = new Point_2(b1,0);
-//		Point_2 v0 = new Point_2(0,0);
-//		Point_2 v1 = new Point_2(h.length,0);
-//		Point_2 s = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, d0, d1);
-//		Point_2 v2 = ExactAlgorithm.ofCircCoordinates(v0, v1, h.prev.length, h.next.length);
-//		Point_2 g = new Point_2(x, 0);
-//		double nextX;
-//		if (GeometricOperations_2.orientation(g, v2, s)==1){
-//			Point_2 inter = GeometricOperations_2.intersect(new Segment_2(v0, v2), new Segment_2(g, s));
-//			nextX = (double) v0.distanceFrom(inter);
-//			for (Window w : h.prev.windows) {
-//				if (w.b0 <= nextX && nextX < w.b1)
-//					return w;
-//			}
-//		} else {
-//			Point_2 inter = GeometricOperations_2.intersect(new Segment_2(v1, v2), new Segment_2(g, s));
-//			nextX = (double) v1.distanceFrom(inter);
-//			for (Window w : h.next.windows) {
-//				if (w.b0 <= nextX && nextX < w.b1)
-//					return w;
-//			}
-//		}
-//		throw new RuntimeException();
-//	}
+	//	public Window findWindow(double x)
+	//	{
+	//		if (x<b0 || x>b1)
+	//			throw new RuntimeException();
+	//		Point_2 b0Point = new Point_2(b0,0);
+	//		Point_2 b1Point = new Point_2(b1,0);
+	//		Point_2 v0 = new Point_2(0,0);
+	//		Point_2 v1 = new Point_2(h.length,0);
+	//		Point_2 s = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, d0, d1);
+	//		Point_2 v2 = ExactAlgorithm.ofCircCoordinates(v0, v1, h.prev.length, h.next.length);
+	//		Point_2 g = new Point_2(x, 0);
+	//		double nextX;
+	//		if (GeometricOperations_2.orientation(g, v2, s)==1){
+	//			Point_2 inter = GeometricOperations_2.intersect(new Segment_2(v0, v2), new Segment_2(g, s));
+	//			nextX = (double) v0.distanceFrom(inter);
+	//			for (Window w : h.prev.windows) {
+	//				if (w.b0 <= nextX && nextX < w.b1)
+	//					return w;
+	//			}
+	//		} else {
+	//			Point_2 inter = GeometricOperations_2.intersect(new Segment_2(v1, v2), new Segment_2(g, s));
+	//			nextX = (double) v1.distanceFrom(inter);
+	//			for (Window w : h.next.windows) {
+	//				if (w.b0 <= nextX && nextX < w.b1)
+	//					return w;
+	//			}
+	//		}
+	//		throw new RuntimeException();
+	//	}
 
 }

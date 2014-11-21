@@ -18,8 +18,8 @@ public class MeshViewer extends PApplet {
 	int renderType=0; // choice of type of rendering
 	int renderModes=3; // number of rendering modes
 	
-	//String filename="OFF/high_genus.off";
-	String filename="OFF/sphere.off";
+	String filename="OFF/high_genus.off";
+	//String filename="OFF/sphere.off";
 	//String filename="OFF/cube.off";
 	//String filename="OFF/torus_33.off";
 	//String filename="OFF/tore.off";
