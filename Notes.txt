@@ -1,0 +1,34 @@
+RAPPORT GEODESICS
+
+Problèmes rencontrés
+-------------------------------
+
+- Double propagation dans les halfedges
+- Egalité de flottants
+- (ax*ax - bx*bx) au lieu de (ax - bx)*(ax - bx)
+- Grosse confusion oD0 = b0 ; delta0 = oD0 dans fullCut
+
+- comment savoir si il y a fullCut
+	Démonstration géométrique
+	On considère une intersection de fenêtres (deux points sur l’axe des abscisses) et la source de la première fenêtre (oS).
+	Traçons les cercles de centres delta0, delta1 les bornes de l’intersection passant par oS
+	Pour tout point p de l’intersection la tangente en oS au cercle de centre p passant par oS est "entre" les tangents des deux premiers cercles.
+	De plus, tous ces cercles passent par oS et par le symétrique de oS /axe X
+	Or deux cercles différents ne peuvent avoir que deux intersections
+	Donc le cercle de centre p est toujours "compris" entre les deux cercles extrémaux
+	
+	Ainsi, tout point qui est dans l’intersection des disques correspondants au premiers cercles est dans tout disque correspondant à un cercle de centre p
+	Ceci permet de conclure que si la seconde source est dans cette intersection, c’est-à-dire si wD0 < oD0 et wD1 < oD1, il y a coupe complète.
+	
+	Réciproquement si la seconde source n’est pas dans l’un des deux disques, alors elle est plus éloignée de l’extrémité correspondante que la première source et donc il n’y a pas fullcut.
+	
+	fullcut <=> wD0 <= oD0 et wD1 <= oD1 ou oD0 <= wD0 et oD1 <= wD1
+
+
+Optimisation
+------------------
+- Ne pas recalculer les longueurs d’arête à chaque fois
+
+- Suppressions de fenêtres
+- Ajout en double cut
+- Suppression de la fenetre objet en fullcut
