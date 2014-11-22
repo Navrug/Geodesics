@@ -306,79 +306,10 @@ public class Window implements Comparable<Window>
 			w.d0 = wDp;
 			return 0;
 			}
-
-			//			if (Math.abs(data.delta0 - b0) < ExactAlgorithm.epsilon) {
-			//				if(Math.abs(data.delta1-w.b1) < ExactAlgorithm.epsilon) {
-			//					b0 = p;
-			//					d0 = oDp;
-			//					w.b1 = p;
-			//					w.d1 = wDp;
-			//				}
-			//				else {
-			//	
-			//				}
-			//			} else if (Math.abs(data.delta0 - w.b0) < ExactAlgorithm.epsilon){
-			//				//assert(Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon); wrong assumption
-			//				w.b0 = p;
-			//				w.d0 = wDp;
-			//				b1 = p;
-			//				d1 = oDp;
-			//			} else
-			//				return 0;
 		}
 	}
 
 
-	/**
-	 * Function used to compute the new window bounds when 2 windows overlap.
-	 * Must ensure that the resulting windows are larger than 0.
-	 * @return 0 if there was no overlap, 1 if there was some, 2 if the object is deleted, 3 if the argument is
-
-	public int overlapOld(Window w)
-	{
-		//No overlap
-		if(b1 <= w.b0 || w.b1 <= b0)
-			return 0;
-		//Overlap, compute new bound
-		assert(w.h == h);
-		Point_2 b0Point = new Point_2(b0,0);
-		Point_2 b1Point = new Point_2(b1,0);
-		Point_2 s0 = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, d0, d1);
-		Point_2 b2Point = new Point_2(w.b0,0);
-		Point_2 b3Point = new Point_2(w.b1,0);
-		Point_2 s1 = ExactAlgorithm.ofCircCoordinates(b2Point, b3Point, w.d0, w.d1);
-		double s0x = (double) s0.getX();
-		double s1x = (double) s1.getX();
-		double s0y = (double) s0.getY();
-		double s1y = (double) s1.getY();
-		double alpha = s1x - s0x;
-		double beta = w.sigma - sigma;
-		double squareS0 = s0x*s0x + s0y*s0y;
-		double squareS1 = s1x*s1x + s1y*s1y;
-		double squareBeta = beta*beta;
-		double gamma = squareS0 - squareS1 - squareBeta;
-		double A = alpha*alpha - squareBeta;
-		double B = gamma*alpha + 2*s1x*squareBeta;
-		//		double C = gamma*gamma/4 - squareS1*squareBeta;
-		//		double delta = B*B - 4*A*C;
-		double p = (-B)/(2*A);
-		//Assigning computed bound
-		if ((p<=b0 || p>=b1) {
-			return 2;
-		} else if (p<=w.b0 || p>=w.b1) {
-			return 3;
-		} else if (b1 > w.b0) {
-			b1 = p;
-			w.b0 = p;
-		} else if (b0 < w.b1) {
-			b0 = p;
-			w.b1 = p;
-		}
-		else
-			throw new RuntimeException();
-		return 1;
-	}
-	 */
 	public double distance()
 	{
 		return (new Double(Math.min(d0, d1) + sigma));
@@ -432,6 +363,7 @@ public class Window implements Comparable<Window>
 			assert(nextX <= h.prev.length);
 			nextX = h.prev == h.prev.pair.one ? h.prev.length - nextX : nextX;
 			nextWindow = h.prev.pair.getWindow(nextX);
+			assert(nextWindow != null);
 			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
 			return nextWindow.findTrack(nextWindow.tau ? nextX : h.prev.length - nextX, 
 					distance + (double) g.distanceFrom(intersection));
@@ -442,6 +374,7 @@ public class Window implements Comparable<Window>
 			assert(nextX <= h.next.length);
 			nextX = h.next == h.next.pair.one ? nextX : h.next.length - nextX;
 			nextWindow = h.next.pair.getWindow(nextX);	
+			assert(nextWindow != null);
 			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
 			return nextWindow.findTrack(nextWindow.tau ? nextX : h.next.length - nextX, 
 					distance + (double) g.distanceFrom(intersection));

@@ -48,6 +48,11 @@ public class ExactAlgorithm
 		}
 		return result;
 	}
+	
+	private static boolean equalPoints(Point_2 a, Point_2 b)
+	{
+		return (double) a.distanceFrom(b) < ExactAlgorithm.epsilon;
+	}
 
 	/**
 	 *  !!! Beware of rounding errors in the edge borders, may need to handle them more properly
@@ -64,44 +69,73 @@ public class ExactAlgorithm
 		Point_2 v0 = new Point_2(0,0);
 		Point_2 v2 = new Point_2(e.length, 0);
 		Point_2 v1 = ofCircCoordinates(v0, v2, e.next.length, e.prev.length, false);
-		//
-		Point_2 c1, c2;
-		Window w;
 		int orientation1 = GeometricOperations_2.orientation(source, b0Point, v1);
 		int orientation2 = GeometricOperations_2.orientation(source, b1Point, v1);
 		assert(!(orientation1 == 0 && orientation2 == 0)); // this implies that b0==b1, impossible
-		if (orientation1 == 1) {
+		if (equalPoints(v0, source) || equalPoints(v2, source)) {
+			assert(equalPoints(b0Point, source) || equalPoints(b1Point, source));
+			doublePropagation(v0, v1, v2, b0Point, b1Point, source, e, v);
+		}
+		else if (orientation1 == 1) {
 			if (orientation2 >= 0) { //Propagates fully in the first edge
-				c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v0, v1));
-				c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v0, v1));
-				w = new Window(e.next, v.sigma,
-						(double) c1.distanceFrom(v0), (double) c2.distanceFrom(v0),
-						(double) c1.distanceFrom(source), (double) c2.distanceFrom(source));
-				addWindow(w, e.next);
+				leftPropagation(v0, v1, v2, b0Point, b1Point, source, e, v);
 
 			} else { //Propagates in both edges
-				c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v0, v1));
-				c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v1, v2));
-				w = new Window(e.next, v.sigma,
-						(double) c1.distanceFrom(v0), e.next.length,
-						(double) c1.distanceFrom(source), (double) v1.distanceFrom(source));
-				addWindow(w, e.next);
-				w = new Window(e.prev, v.sigma,
-						(double) 0, (double) c2.distanceFrom(v1),
-						(double) v1.distanceFrom(source), (double) c2.distanceFrom(source));
-				addWindow(w, e.prev);
+				doublePropagation(v0, v1, v2, b0Point, b1Point, source, e, v);
 			}
 		}
-		else {
+		else { //Propagates in the second edge
 			assert(orientation2 != 1);
-			// Propagate fully in the second edge
-			c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v1, v2));
-			c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v1, v2));
-			w = new Window(e.prev, v.sigma,
-					(double) c1.distanceFrom(v1), (double) c2.distanceFrom(v1),
-					(double) c1.distanceFrom(source), (double) c2.distanceFrom(source));
-			addWindow(w, e.prev);
+			rightPropagation(v0, v1, v2, b0Point, b1Point, source, e, v);
 		}
+	}
+	
+	private void leftPropagation(Point_2 v0, Point_2 v1, Point_2 v2,
+			Point_2 b0Point, Point_2 b1Point, Point_2 source,
+			Halfedge<Point_3> e, Window v)
+	{
+		Point_2 c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v0, v1));
+		Point_2 c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v0, v1));
+		Window w = new Window(e.next, v.sigma,
+				(double) c1.distanceFrom(v0), (double) c2.distanceFrom(v0),
+				(double) c1.distanceFrom(source), (double) c2.distanceFrom(source));
+		addWindow(w, e.next);
+	}
+	
+	private void doublePropagation(Point_2 v0, Point_2 v1, Point_2 v2,
+			Point_2 b0Point, Point_2 b1Point, Point_2 source,
+			Halfedge<Point_3> e, Window v)
+	{
+		Point_2 c1;
+		Point_2 c2;
+		if (equalPoints(v0, source))
+			c1 = v0;
+		else
+			c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v0, v1));
+		if (equalPoints(v2, source))
+			c2 = v2;
+		else
+			c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v1, v2));
+		Window w = new Window(e.next, v.sigma,
+				(double) c1.distanceFrom(v0), e.next.length,
+				(double) c1.distanceFrom(source), (double) v1.distanceFrom(source));
+		addWindow(w, e.next);
+		w = new Window(e.prev, v.sigma,
+				(double) 0, (double) c2.distanceFrom(v1),
+				(double) v1.distanceFrom(source), (double) c2.distanceFrom(source));
+		addWindow(w, e.prev);
+	}
+	
+	private void rightPropagation(Point_2 v0, Point_2 v1, Point_2 v2,
+			Point_2 b0Point, Point_2 b1Point, Point_2 source,
+			Halfedge<Point_3> e, Window v)
+	{
+		Point_2 c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v1, v2));
+		Point_2 c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v1, v2));
+		Window w = new Window(e.prev, v.sigma,
+				(double) c1.distanceFrom(v1), (double) c2.distanceFrom(v1),
+				(double) c1.distanceFrom(source), (double) c2.distanceFrom(source));
+		addWindow(w, e.prev);
 	}
 
 	/**
@@ -150,13 +184,13 @@ public class ExactAlgorithm
 		//Adding the opposite edges
 		Halfedge<Point_3> first = v.getHalfedge().getOpposite().getNext();
 		Halfedge<Point_3> temp = first;
-		do {
-			Window w = new Window(temp, 0, 0, temp.length, temp.prev.length, temp.next.length);
-			w.first = true;
-			temp.pair.addWindow(w);
-			queue.add(w);
-			temp = temp.getNext().getOpposite().getNext();
-		} while(temp != first);		
+//		do {
+//			Window w = new Window(temp, 0, 0, temp.length, temp.prev.length, temp.next.length);
+//			w.first = true;
+//			temp.pair.addWindow(w);
+//			queue.add(w);
+//			temp = temp.getNext().getOpposite().getNext();
+//		} while(temp != first);		
 
 		//Adding the adjacent edges
 		first = v.getHalfedge();
@@ -165,6 +199,7 @@ public class ExactAlgorithm
 			Window w = new Window(temp, 0, 0, temp.length, temp.length, 0);
 			w.first = true;
 			temp.pair.addWindow(w);
+			queue.add(w);
 			temp = temp.getNext().getOpposite();
 		} while(temp != first);
 	}

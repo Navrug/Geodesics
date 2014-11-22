@@ -20,8 +20,8 @@ public class MeshViewer extends PApplet {
 	Random r = new Random(System.currentTimeMillis());
 
 
-	String filename="OFF/high_genus.off";
-	//String filename="OFF/sphere.off";
+	//String filename="OFF/high_genus.off";
+	String filename="OFF/sphere.off";
 	//String filename="OFF/cube.off";
 	//String filename="OFF/torus_33.off";
 	//String filename="OFF/tore.off";
@@ -114,8 +114,7 @@ public class MeshViewer extends PApplet {
 			break;
 		}
 		case('c'): 
-			mesh.checkEdges(); 
-		//			    	mesh.cleanPath();
+			mesh.checkEdges(1000); 
 		break;
 		}
 	}

@@ -60,13 +60,13 @@ public class HalfedgePair {
 		w.convert();
 		for(Window v : windows) {
 			v.convert();
-			result = w.overlap(v);
+			result = v.overlap(w);
 			v.unConvert();
-			if (result == 1) {  //The object is marked invalid and is deleted from the queue when popped
+			if (result == -1) {  //The object is marked invalid and is deleted from the queue when popped
 				toRemove.add(v);
 				v.valid = false;
 			}
-			if (result == -1)
+			if (result == 1)
 				return false;
 		}
 		w.unConvert();
@@ -99,18 +99,15 @@ public class HalfedgePair {
 				return w;
 		}
 		display();
-		throw new RuntimeException();
+		return null;
 	}
 	
 	public boolean test(int n)
 	{
 		double dx = one.length/n;
 		for (int i = 0; i<=n; i++) {
-			try {
-				getWindow(i*dx);
-			} catch (RuntimeException e) {
+			if (getWindow(i*dx) == null)
 				return false;
-			}
 		}
 		return true;
 	}

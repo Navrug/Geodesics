@@ -224,13 +224,15 @@ public class SurfaceMesh {
 	}
 
 
-	public void checkEdges()
+	public void checkEdges(int n)
 	{
 		for (Halfedge<Point_3> h : polyhedron3D.halfedges) {
-			if (!h.pair.test(1000)) {
+			if (!h.pair.test(n)) {
 				h.pair.color = -1;
 				h.pair.display();
 			}
+			else
+				h.pair.color = 0;
 		}
 	}
 
