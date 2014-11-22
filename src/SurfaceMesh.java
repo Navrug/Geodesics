@@ -77,6 +77,8 @@ public class SurfaceMesh {
 		view.vertex( (float)(q.getX().doubleValue()*s), (float)(q.getY().doubleValue()*s), (float)(q.getZ().doubleValue()*s));
 		view.vertex( (float)(r.getX().doubleValue()*s), (float)(r.getY().doubleValue()*s), (float)(r.getZ().doubleValue()*s));
 	}
+	
+	
 
 	/**
 	 * Draw a (triangle or polygonal) face
@@ -87,8 +89,10 @@ public class SurfaceMesh {
 		
 		Point_3 u=h.getOpposite().getVertex().getPoint();
 		view.noStroke();
-		if(f.isColored())
-			view.fill(0,200,0,255);
+		if(f.color >= 1)
+			view.fill(0,Math.max(50, (13-f.color)*20),0,255);
+		else if (f.color == -1)
+			view.fill(0,0,200,255);
 		else
 			view.fill(200,0,0,255); // color of the triangle
 		
@@ -98,6 +102,25 @@ public class SurfaceMesh {
 			this.drawTriangle(u, v, w); // draw a triangle face
 			
 			pEdge=pEdge.getNext();
+		}
+	}
+	
+	public void drawPath(Face<Point_3> f) {
+		if (f.path != null) {
+			Point_3[] tab = new Point_3[2];
+			tab[1] = f.path.first.getVertex().getPoint();
+			tab[0] = f.path.first.getOpposite().getVertex().getPoint();
+			Number[] coeff = new Number[2];
+			coeff[0] = 1 - f.path.rFirst;
+			coeff[1] = f.path.rFirst;
+			Point_3 a = Point_3.linearCombination(tab, coeff);
+			tab[1] = f.path.second.getVertex().getPoint();
+			tab[0] = f.path.second.getOpposite().getVertex().getPoint();
+			coeff[0] = 1 - f.path.rSecond;
+			coeff[1] = f.path.rSecond;
+			Point_3 b = Point_3.linearCombination(tab, coeff);
+			view.stroke(255,0,255,255);
+			drawSegment(a, b);
 		}
 	}
 	
@@ -117,6 +140,11 @@ public class SurfaceMesh {
 		}
 		view.endShape();
 		
+		view.strokeWeight(4); // line width (for edges)
+		for(Face<Point_3> f: this.polyhedron3D.facets) {
+			this.drawPath(f);
+		}
+		
 		if(type==1) return; // no rendering of edges
 		
 		// draw all edges
@@ -125,7 +153,10 @@ public class SurfaceMesh {
 		for(Halfedge<Point_3> e: this.polyhedron3D.halfedges) {
 			Point_3 p=e.vertex.getPoint();
 			Point_3 q=e.opposite.vertex.getPoint();
-			
+			if (e.pair.color == -1)
+				view.stroke(0,255,255,255);
+			else
+				view.stroke(0,0,0,255);
 			this.drawSegment(p, q); // draw edge (p,q)
 		}
 		//view.strokeWeight(1);
@@ -182,6 +213,15 @@ public class SurfaceMesh {
 	 */
 	public void updateScaleFactor() {
 		this.scaleFactor=this.computeScaleFactor();
+	}
+	
+	
+	public void checkEdges()
+	{
+		for (Halfedge<Point_3> h : polyhedron3D.halfedges) {
+			if (h.pair.windows.size() == 0)
+				h.pair.color = -1;
+		}
 	}
 
 	

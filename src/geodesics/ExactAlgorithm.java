@@ -8,6 +8,7 @@ import Jcg.geometry.Point_3;
 import Jcg.geometry.Segment_2;
 import Jcg.polyhedron.Face;
 import Jcg.polyhedron.Halfedge;
+import Jcg.polyhedron.Polyhedron_3;
 import Jcg.polyhedron.Vertex;
 
 public class ExactAlgorithm
@@ -59,7 +60,7 @@ public class ExactAlgorithm
 		Window w;
 		int orientation1 = GeometricOperations_2.orientation(source, b0Point, v1);
 		int orientation2 = GeometricOperations_2.orientation(source, b1Point, v1);
-		if(orientation1 == 0 || orientation2 == 0) // Case of perfectly aligned opposite, should not happen with doubles, does it ?
+		if(orientation1 == 0 || orientation2 == 0) // Case of perfectly aligned opposite, should not happen with doubles, does it?
 			throw new RuntimeException();
 		else if (orientation1 == 1) {
 			if (orientation2 == 1) { //Propagates fully in the first edge
@@ -142,7 +143,10 @@ public class ExactAlgorithm
 		Halfedge<Point_3> first = v.getHalfedge().getOpposite().getNext();
 		Halfedge<Point_3> temp = first;
 		do {
-			queue.add(new Window(temp, 0, 0, temp.length, temp.prev.length, temp.next.length));
+			Window w = new Window(temp, 0, 0, temp.length, temp.prev.length, temp.next.length);
+			w.first = true;
+			temp.pair.addWindow(w);
+			queue.add(w);
 			temp = temp.getNext().getOpposite().getNext();
 		} while(temp != first);
 	}
@@ -160,34 +164,77 @@ public class ExactAlgorithm
 		initializeQueue(first);
 		Window current;
 		while (!queue.isEmpty()) {
+			System.out.println("----------------"); 
 			current = queue.poll();
 			if (!current.valid && Math.abs(current.b1 - current.b0) < epsilon)
 				continue;
-			try {
-				propagate(current);
-			} catch (RuntimeException e2) {
-				System.out.println("Caught!");
-				//return;
-			}
+			propagate(current);
+
 		}
 		
 	}
 	
+	public void computeInit()
+	{
+		if(first == null || second == null) {
+			System.out.println("Please define points first");
+			return;
+		}
+		initializeQueue(first);
+	}
+	
 	public void computeOne()
 	{
+		System.out.println("----------------"); 
 		Window current = queue.poll();
 		current.display();
 		System.out.println("Distance " + current.distance());
 //		current.pair.one.getFace().color();
 		if (!current.valid && Math.abs(current.b1 - current.b0) < epsilon)
 			return;
-		try {
-			propagate(current);
-		} catch (RuntimeException e2) {
-			System.out.println("Caught!");
-			return;
-		}
+		propagate(current);
 	}
+	
+	
+	public void backtrack()
+	{
+		Halfedge<Point_3> first = second.getHalfedge();
+		Halfedge<Point_3> temp = first;
+		Halfedge<Point_3> bestHalfhedge = null;
+		Window best = null;
+		Window tempWindow;
+		double tempDistance;
+		double bestDistance = Double.MAX_VALUE;
+		do {
+			if (temp == temp.pair.one) {
+				tempWindow = temp.pair.getWindow(0);
+				tempDistance = tempWindow.tau ? tempWindow.d0 : tempWindow.d1;
+				if (best==null || bestDistance > tempDistance) {
+					bestDistance = tempDistance;
+					best = tempWindow;
+					bestHalfhedge = temp;
+				}
+			} else {
+				tempWindow = temp.pair.getWindow(temp.length);
+				tempDistance = tempWindow.tau ? tempWindow.d1 : tempWindow.d0;
+				if (best==null || bestDistance > tempDistance) {
+					bestDistance = tempDistance;
+					best = tempWindow;
+					bestHalfhedge = temp;
+				}				
+			}
+			temp = temp.getNext().getOpposite();
+		} while(temp != first);
+		double distance;
+		if (/*(bestHalfhedge.getVertex() == second && !best.tau)
+			|| (*/bestHalfhedge.getVertex() != second /*&& best.tau)*/)
+			distance = best.findTrack(0, 0);
+		else
+			distance = best.findTrack(bestHalfhedge.length, 0);
+		System.out.println("The geodesic measures "+ distance ) ;
+	}
+	
+
 
 
 	/*static public void main(String[] args){

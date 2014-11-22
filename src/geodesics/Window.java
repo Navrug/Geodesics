@@ -18,9 +18,9 @@ public class Window implements Comparable<Window>
 	boolean tau; // Determines whether the source is on the side of the first halfedge or the second
 	boolean first = false;
 	public boolean valid = true; //Temporary solution that avoid removing windows from the queue
-	//boolean side; Might be better to consider halfedges and to set the window on the halfedge corresponding to the face from which the ray arrives.
+	private boolean converted = false;
 
-	public Window(HalfedgePair pair, double sigma, double b0, double b1, double d0, double d1, boolean tau)
+	public Window(HalfedgePair pair, double sigma, double b0, double b1, double d0, double d1, boolean tau, boolean converted)
 	{
 		this.pair = pair;
 		this.sigma = sigma;
@@ -29,6 +29,7 @@ public class Window implements Comparable<Window>
 		this.d0 = d0;
 		this.d1 = d1;
 		this.tau = tau;
+		this.converted = converted;
 		if(tau)
 			pair.one.getFace().color();
 		else
@@ -59,6 +60,36 @@ public class Window implements Comparable<Window>
 		System.out.println("Window of edge "+pair.one.index+" : { sigma="+sigma+", b0="+b0+", b1="+b1+", d0="+d0+", d1="+d1+" , tau="+tau+" }");
 	}
 
+	public void convert()
+	{
+		assert(!converted);
+		converted = true;
+		if (tau) return;
+		double temp = b0;
+		b0 = pair.one.length - b1;
+		b1 = pair.one.length - temp;
+		temp = d0;
+		d0 = d1;
+		d1 = temp;
+	}
+
+	public void unConvert()
+	{
+		assert(converted);
+		converted = false;
+		if (tau) return;
+		double temp = b0;
+		b0 = pair.one.length - b1;
+		b1 = pair.one.length - temp;
+		temp = d0;
+		d0 = d1;
+		d1 = temp;
+	}
+
+	public Halfedge<Point_3> getHalfedge()
+	{
+		return tau ? pair.one : pair.two;
+	}
 
 
 	private class OverlapData {
@@ -125,6 +156,7 @@ public class Window implements Comparable<Window>
 			data.delta1 = b1;	
 		}
 		assert(data.delta0 < data.delta1 + ExactAlgorithm.epsilon);
+
 
 		//		//Computing the distance to the source of the window intersection bounds
 		//		double oMin, oMax, wMin, wMax;
@@ -205,16 +237,16 @@ public class Window implements Comparable<Window>
 					w.d0 = data.wD1;
 					return 0;
 				}
-			else 
-				if (Math.abs(data.delta1 - w.b1) < ExactAlgorithm.epsilon) {
-					w.b1 = data.delta0;
-					w.d1 = data.wD0;
-					return 0;
+			else {
+				if (!(Math.abs(data.delta1 - w.b1) < ExactAlgorithm.epsilon)) { // Double cut
+					Window right = new Window(w.pair, w.sigma, b1, w.b1, data.wD1, w.d1, w.tau, w.converted);
+					right.unConvert();
+					pair.addWindowLater(right);
 				}
-				else { //Case that should not happen
-					System.out.println("A window must be cut in two separate windows: nonexistent feature");
-					throw new RuntimeException();
-				}
+				w.b1 = b0;
+				w.d1 = data.wD0;
+				return 0;
+			}
 		else if (fullCutResult == -1) //argument better on full interval		
 			if(Math.abs(data.delta0 - b0) < ExactAlgorithm.epsilon)
 				if(Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon)
@@ -224,16 +256,16 @@ public class Window implements Comparable<Window>
 					d0 = data.oD1;
 					return 0;
 				}
-			else 
-				if (Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon) {
-					b1 = data.delta0;
-					d1 = data.oD0;
-					return 0;
+			else {
+				if (!(Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon)) {
+					Window right = new Window(pair, sigma, w.b1, b1, data.oD1, d1, tau, converted);
+					right.unConvert();
+					pair.addWindowLater(right);
 				}
-				else { //Case that should not happen
-					System.out.println("A window must be cut in two separate windows: nonexistent feature");
-					throw new RuntimeException();
-				}
+				b1 = w.b0;
+				d1 = data.oD0;
+				return 0;
+			}
 		else {
 			double p = overlapBoundary(w, data);
 			double oDp = Math.sqrt(data.o_s.y*data.o_s.y + (data.o_s.x - p)*(data.o_s.x - p));
@@ -243,11 +275,13 @@ public class Window implements Comparable<Window>
 			if (data.wD0 < data.oD0 + ExactAlgorithm.epsilon) { //Argument better on the left of p
 				assert(data.oD1 < data.wD1 + ExactAlgorithm.epsilon);
 				if (b0 < data.delta0 - ExactAlgorithm.epsilon) { //Object goes further than argument on the left, double cut
-					Window left = new Window(pair, sigma, b0, w.b0, d0, data.oD0, tau);
+					Window left = new Window(pair, sigma, b0, w.b0, d0, data.oD0, tau, converted);
+					left.unConvert();			
 					pair.addWindowLater(left);
 				}
 				if (w.b1 > data.delta1 + ExactAlgorithm.epsilon) {
-					Window right = new Window(w.pair, w.sigma, b1, w.b1, data.wD1, w.d1, w.tau);
+					Window right = new Window(w.pair, w.sigma, b1, w.b1, data.wD1, w.d1, w.tau, w.converted);
+					right.unConvert();
 					pair.addWindowLater(right);
 				}
 				b0 = p;
@@ -256,39 +290,41 @@ public class Window implements Comparable<Window>
 				w.d1 = wDp;
 				return 0;
 			} else { assert(data.wD1 < data.oD1 + ExactAlgorithm.epsilon); //Argument better on the right of p
-				if (w.b0 < data.delta0 - ExactAlgorithm.epsilon) {
-					Window left = new Window(w.pair, w.sigma, w.b0, data.delta0, w.d0, data.wD0, w.tau);
-					pair.addWindowLater(left);					
-				}
-				if (b1 > data.delta1 + ExactAlgorithm.epsilon) {
-					Window right = new Window(pair, sigma, data.delta1, b1, data.oD1, d1, tau);
-					pair.addWindowLater(right);
-				}
-				b1 = p;
-				d1 = oDp;
-				w.b0 = p;
-				w.d0 = wDp;
-				return 0;
+			if (w.b0 < data.delta0 - ExactAlgorithm.epsilon) {
+				Window left = new Window(w.pair, w.sigma, w.b0, data.delta0, w.d0, data.wD0, w.tau, w.converted);
+				left.unConvert();			
+				pair.addWindowLater(left);		
+			}
+			if (b1 > data.delta1 + ExactAlgorithm.epsilon) {
+				Window right = new Window(pair, sigma, data.delta1, b1, data.oD1, d1, tau, converted);
+				right.unConvert();
+				pair.addWindowLater(right);
+			}
+			b1 = p;
+			d1 = oDp;
+			w.b0 = p;
+			w.d0 = wDp;
+			return 0;
 			}
 
-//			if (Math.abs(data.delta0 - b0) < ExactAlgorithm.epsilon) {
-//				if(Math.abs(data.delta1-w.b1) < ExactAlgorithm.epsilon) {
-//					b0 = p;
-//					d0 = oDp;
-//					w.b1 = p;
-//					w.d1 = wDp;
-//				}
-//				else {
-//	
-//				}
-//			} else if (Math.abs(data.delta0 - w.b0) < ExactAlgorithm.epsilon){
-//				//assert(Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon); wrong assumption
-//				w.b0 = p;
-//				w.d0 = wDp;
-//				b1 = p;
-//				d1 = oDp;
-//			} else
-//				return 0;
+			//			if (Math.abs(data.delta0 - b0) < ExactAlgorithm.epsilon) {
+			//				if(Math.abs(data.delta1-w.b1) < ExactAlgorithm.epsilon) {
+			//					b0 = p;
+			//					d0 = oDp;
+			//					w.b1 = p;
+			//					w.d1 = wDp;
+			//				}
+			//				else {
+			//	
+			//				}
+			//			} else if (Math.abs(data.delta0 - w.b0) < ExactAlgorithm.epsilon){
+			//				//assert(Math.abs(data.delta1 - b1) < ExactAlgorithm.epsilon); wrong assumption
+			//				w.b0 = p;
+			//				w.d0 = wDp;
+			//				b1 = p;
+			//				d1 = oDp;
+			//			} else
+			//				return 0;
 		}
 	}
 
@@ -368,40 +404,50 @@ public class Window implements Comparable<Window>
 	{
 		return new Double(distance()).compareTo(w.distance());
 	}
-	
-	
-	
-	
-	
 
-	//	public Window findWindow(double x)
-	//	{
-	//		if (x<b0 || x>b1)
-	//			throw new RuntimeException();
-	//		Point_2 b0Point = new Point_2(b0,0);
-	//		Point_2 b1Point = new Point_2(b1,0);
-	//		Point_2 v0 = new Point_2(0,0);
-	//		Point_2 v1 = new Point_2(h.length,0);
-	//		Point_2 s = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, d0, d1);
-	//		Point_2 v2 = ExactAlgorithm.ofCircCoordinates(v0, v1, h.prev.length, h.next.length);
-	//		Point_2 g = new Point_2(x, 0);
-	//		double nextX;
-	//		if (GeometricOperations_2.orientation(g, v2, s)==1){
-	//			Point_2 inter = GeometricOperations_2.intersect(new Segment_2(v0, v2), new Segment_2(g, s));
-	//			nextX = (double) v0.distanceFrom(inter);
-	//			for (Window w : h.prev.windows) {
-	//				if (w.b0 <= nextX && nextX < w.b1)
-	//					return w;
-	//			}
-	//		} else {
-	//			Point_2 inter = GeometricOperations_2.intersect(new Segment_2(v1, v2), new Segment_2(g, s));
-	//			nextX = (double) v1.distanceFrom(inter);
-	//			for (Window w : h.next.windows) {
-	//				if (w.b0 <= nextX && nextX < w.b1)
-	//					return w;
-	//			}
-	//		}
-	//		throw new RuntimeException();
-	//	}
+
+	public double findTrack(double x, double distance) // x is given in coordinates of the window
+	{
+		assert(x >= b0 - ExactAlgorithm.epsilon && x <= b1 + ExactAlgorithm.epsilon); 
+		Halfedge<Point_3> h = getHalfedge();
+		h.getOpposite().getFace().color = -1;
+		Point_2 b0Point = new Point_2(b0,0);
+		Point_2 b1Point = new Point_2(b1,0);
+		Point_2 v0 = new Point_2(0,0);
+		Point_2 v1 = new Point_2(h.length,0);
+		Point_2 s = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, d0, d1, true);
+		Point_2 v2 = ExactAlgorithm.ofCircCoordinates(v0, v1, h.prev.length, h.next.length, true);
+		Point_2 g = new Point_2(x, 0);
+		if (first) {
+			return distance + (double) g.distanceFrom(s);
+		}
+		Window nextWindow;
+		Point_2 intersection;
+		double nextX;
+		if (GeometricOperations_2.orientation(g, v2, s)==1) {
+			intersection = GeometricOperations_2.intersect(new Segment_2(v0, v2), new Segment_2(g, s));
+			nextX = (double) v0.distanceFrom(intersection);
+			h.face.setPath(h, x, h.prev, h.prev.length - nextX);
+			assert(nextX <= h.prev.length);
+			nextX = h.next == h.next.pair.one ? h.prev.length - nextX : nextX;
+			nextWindow = h.prev.pair.getWindow(nextX);
+		} else {
+			intersection = GeometricOperations_2.intersect(new Segment_2(v1, v2), new Segment_2(g, s));
+			nextX = (double) v1.distanceFrom(intersection);
+			h.face.setPath(h, x, h.next, nextX);
+			assert(nextX <= h.prev.length);
+			nextX = h.next == h.next.pair.one ? nextX : h.next.length - nextX;
+			nextWindow = h.next.pair.getWindow(nextX);	
+		}
+		System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
+		return nextWindow.findTrack(nextWindow.tau ? nextX : h.next.length - nextX, 
+				distance + (double) g.distanceFrom(intersection));
+	}
+
+	public boolean contains(double x) { // x is given in "one" coordinates
+		
+		return (tau && b0 <= x + ExactAlgorithm.epsilon && x <= b1 + ExactAlgorithm.epsilon) 
+				|| (!tau && (pair.one.length - b1) <= x && x <=(pair.one.length - b0));
+	}
 
 }

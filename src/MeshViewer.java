@@ -18,8 +18,8 @@ public class MeshViewer extends PApplet {
 	int renderType=0; // choice of type of rendering
 	int renderModes=3; // number of rendering modes
 	
-	String filename="OFF/high_genus.off";
-	//String filename="OFF/sphere.off";
+	//String filename="OFF/high_genus.off";
+	String filename="OFF/sphere.off";
 	//String filename="OFF/cube.off";
 	//String filename="OFF/torus_33.off";
 	//String filename="OFF/tore.off";
@@ -79,13 +79,22 @@ public class MeshViewer extends PApplet {
 		public void keyPressed(){
 			  switch(key) {
 			    case('r'):this.renderType=(this.renderType+1)%this.renderModes; break;
-			    case('g'):
-			    	Random r = new Random(System.currentTimeMillis());
+			    case('f'):
+//			    	Random r = new Random(System.currentTimeMillis());
+		    		Random r = new Random(0);
 			    	int id = r.nextInt(mesh.polyhedron3D.vertices.size()-1);
 		    		setFirstPoint(mesh.polyhedron3D.vertices.get(0));
 		    		setSecondPoint(mesh.polyhedron3D.vertices.get((1+id) % mesh.polyhedron3D.vertices.size()));
 			    	geodesics.compute(); break;
-			    case('h'): geodesics.computeOne(); System.out.println("----------------"); break;
+			    case('g'):
+			    	r = new Random(System.currentTimeMillis());
+			    	id = r.nextInt(mesh.polyhedron3D.vertices.size()-1);
+		    		setFirstPoint(mesh.polyhedron3D.vertices.get(0));
+		    		setSecondPoint(mesh.polyhedron3D.vertices.get((1+id) % mesh.polyhedron3D.vertices.size()));
+			    	geodesics.computeInit(); break;
+			    case('h'): geodesics.computeOne(); break;
+			    case('b'): geodesics.backtrack(); break;
+			    case('c'): mesh.checkEdges(); break;
 			  }
 		}
 		
