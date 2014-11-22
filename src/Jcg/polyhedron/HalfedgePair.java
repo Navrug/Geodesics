@@ -4,6 +4,7 @@ import geodesics.Window;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.PriorityQueue;
 
 import Jcg.geometry.Point_3;
 
@@ -14,7 +15,7 @@ public class HalfedgePair {
 	int first, second;
 	public Halfedge<Point_3> one;
 	public Halfedge<Point_3> two;
-	public HashSet<Window> windows = new HashSet<Window>();
+	public PriorityQueue<Window> windows = new PriorityQueue<Window>();
 	private ArrayList<Window> toAdd = new ArrayList<>();
 	public int color;
 
@@ -37,6 +38,13 @@ public class HalfedgePair {
 	public int hashCode() {
 		return first*second;
 	}
+	
+	public void display()
+	{
+		for (Window w : windows)
+			w.display();
+	}
+	
 	
 
 	public void addWindowLater(Window w)
@@ -90,6 +98,20 @@ public class HalfedgePair {
 			if (w.contains(x))
 				return w;
 		}
+		display();
 		throw new RuntimeException();
+	}
+	
+	public boolean test(int n)
+	{
+		double dx = one.length/n;
+		for (int i = 0; i<=n; i++) {
+			try {
+				getWindow(i*dx);
+			} catch (RuntimeException e) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

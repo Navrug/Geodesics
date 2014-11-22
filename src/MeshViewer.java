@@ -17,6 +17,8 @@ public class MeshViewer extends PApplet {
 	ExactAlgorithm geodesics;
 	int renderType=0; // choice of type of rendering
 	int renderModes=3; // number of rendering modes
+	Random r = new Random(0);
+
 	
 	//String filename="OFF/high_genus.off";
 	String filename="OFF/sphere.off";
@@ -80,21 +82,26 @@ public class MeshViewer extends PApplet {
 			  switch(key) {
 			    case('r'):this.renderType=(this.renderType+1)%this.renderModes; break;
 			    case('f'):
-//			    	Random r = new Random(System.currentTimeMillis());
-		    		Random r = new Random(0);
 			    	int id = r.nextInt(mesh.polyhedron3D.vertices.size()-1);
 		    		setFirstPoint(mesh.polyhedron3D.vertices.get(0));
 		    		setSecondPoint(mesh.polyhedron3D.vertices.get((1+id) % mesh.polyhedron3D.vertices.size()));
 			    	geodesics.compute(); break;
 			    case('g'):
-			    	r = new Random(System.currentTimeMillis());
 			    	id = r.nextInt(mesh.polyhedron3D.vertices.size()-1);
 		    		setFirstPoint(mesh.polyhedron3D.vertices.get(0));
 		    		setSecondPoint(mesh.polyhedron3D.vertices.get((1+id) % mesh.polyhedron3D.vertices.size()));
 			    	geodesics.computeInit(); break;
 			    case('h'): geodesics.computeOne(); break;
-			    case('b'): geodesics.backtrack(); break;
-			    case('c'): mesh.checkEdges(); break;
+			    case('b'): 
+			    	mesh.cleanPath();
+			    	id = r.nextInt(mesh.polyhedron3D.vertices.size()-1);
+			    	setSecondPoint(mesh.polyhedron3D.vertices.get((1+id) % mesh.polyhedron3D.vertices.size()));
+			    	geodesics.backtrack(); 
+		    		break;
+			    case('c'): 
+			    	mesh.checkEdges(); 
+//			    	mesh.cleanPath();
+			    	break;
 			  }
 		}
 		

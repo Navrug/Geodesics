@@ -23,6 +23,8 @@ public class ExactAlgorithm
 	}
 	
 	public void setSecondPoint(Vertex<Point_3> second){
+		if (this.second != null)
+			this.second.extremum = false;
 		this.second = second; 
 	}
 
@@ -140,6 +142,7 @@ public class ExactAlgorithm
 	 */
 	private void initializeQueue(Vertex<Point_3> v)
 	{
+		//Adding the opposite edges
 		Halfedge<Point_3> first = v.getHalfedge().getOpposite().getNext();
 		Halfedge<Point_3> temp = first;
 		do {
@@ -148,6 +151,16 @@ public class ExactAlgorithm
 			temp.pair.addWindow(w);
 			queue.add(w);
 			temp = temp.getNext().getOpposite().getNext();
+		} while(temp != first);		
+		
+		//Adding the adjacent edges
+		first = v.getHalfedge();
+		temp = first;
+		do {
+			Window w = new Window(temp, 0, 0, temp.length, temp.length, 0);
+			w.first = true;
+			temp.pair.addWindow(w);
+			temp = temp.getNext().getOpposite();
 		} while(temp != first);
 	}
 	
@@ -205,32 +218,39 @@ public class ExactAlgorithm
 		Window tempWindow;
 		double tempDistance;
 		double bestDistance = Double.MAX_VALUE;
+		double bestX = -1;
 		do {
 			if (temp == temp.pair.one) {
-				tempWindow = temp.pair.getWindow(0);
-				tempDistance = tempWindow.tau ? tempWindow.d0 : tempWindow.d1;
-				if (best==null || bestDistance > tempDistance) {
-					bestDistance = tempDistance;
-					best = tempWindow;
-					bestHalfhedge = temp;
-				}
-			} else {
 				tempWindow = temp.pair.getWindow(temp.length);
 				tempDistance = tempWindow.tau ? tempWindow.d1 : tempWindow.d0;
 				if (best==null || bestDistance > tempDistance) {
 					bestDistance = tempDistance;
 					best = tempWindow;
 					bestHalfhedge = temp;
+					bestX = temp.length;
+				}
+			} else {
+				tempWindow = temp.pair.getWindow(0);
+				tempDistance = tempWindow.tau ? tempWindow.d0 : tempWindow.d1;
+				if (best==null || bestDistance > tempDistance) {
+					bestDistance = tempDistance;
+					best = tempWindow;
+					bestHalfhedge = temp;
+					bestX = 0;
 				}				
 			}
 			temp = temp.getNext().getOpposite();
 		} while(temp != first);
 		double distance;
-		if (/*(bestHalfhedge.getVertex() == second && !best.tau)
-			|| (*/bestHalfhedge.getVertex() != second /*&& best.tau)*/)
-			distance = best.findTrack(0, 0);
-		else
-			distance = best.findTrack(bestHalfhedge.length, 0);
+//		if ((bestHalfhedge.getVertex() == second && !best.tau)
+//				|| (bestHalfhedge.getVertex() != second && best.tau))
+//				distance = best.findTrack(0, 0);
+//			else
+//				distance = best.findTrack(bestHalfhedge.length, 0);
+		if (best.tau)
+				distance = best.findTrack(bestX, 0);
+			else
+				distance = best.findTrack(bestHalfhedge.length - bestX, 0);
 		System.out.println("The geodesic measures "+ distance ) ;
 	}
 	

@@ -8,6 +8,7 @@ public class Face<X extends Point_>{
 	Halfedge<X> halfedge=null;
 	public int tag;
 	public int color = 0;
+	public boolean underPath = false;
 	public Path path = null;
 
 	public Face() {}
@@ -109,7 +110,7 @@ public class Face<X extends Point_>{
 			first = h1;
 			second = h2;
 			rFirst = x1/h1.length;
-			rSecond = x2/h2.length;			
+			rSecond = h2==null ? -1 : x2/h2.length;			
 		}
 	}
 

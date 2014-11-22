@@ -410,7 +410,7 @@ public class Window implements Comparable<Window>
 	{
 		assert(x >= b0 - ExactAlgorithm.epsilon && x <= b1 + ExactAlgorithm.epsilon); 
 		Halfedge<Point_3> h = getHalfedge();
-		h.getOpposite().getFace().color = -1;
+		h.getFace().underPath = true;
 		Point_2 b0Point = new Point_2(b0,0);
 		Point_2 b1Point = new Point_2(b1,0);
 		Point_2 v0 = new Point_2(0,0);
@@ -419,6 +419,7 @@ public class Window implements Comparable<Window>
 		Point_2 v2 = ExactAlgorithm.ofCircCoordinates(v0, v1, h.prev.length, h.next.length, true);
 		Point_2 g = new Point_2(x, 0);
 		if (first) {
+			h.face.setPath(h, x, null, -1);
 			return distance + (double) g.distanceFrom(s);
 		}
 		Window nextWindow;
@@ -429,25 +430,28 @@ public class Window implements Comparable<Window>
 			nextX = (double) v0.distanceFrom(intersection);
 			h.face.setPath(h, x, h.prev, h.prev.length - nextX);
 			assert(nextX <= h.prev.length);
-			nextX = h.next == h.next.pair.one ? h.prev.length - nextX : nextX;
+			nextX = h.prev == h.prev.pair.one ? h.prev.length - nextX : nextX;
 			nextWindow = h.prev.pair.getWindow(nextX);
+			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
+			return nextWindow.findTrack(nextWindow.tau ? nextX : h.prev.length - nextX, 
+					distance + (double) g.distanceFrom(intersection));
 		} else {
 			intersection = GeometricOperations_2.intersect(new Segment_2(v1, v2), new Segment_2(g, s));
 			nextX = (double) v1.distanceFrom(intersection);
 			h.face.setPath(h, x, h.next, nextX);
-			assert(nextX <= h.prev.length);
+			assert(nextX <= h.next.length);
 			nextX = h.next == h.next.pair.one ? nextX : h.next.length - nextX;
 			nextWindow = h.next.pair.getWindow(nextX);	
+			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
+			return nextWindow.findTrack(nextWindow.tau ? nextX : h.next.length - nextX, 
+					distance + (double) g.distanceFrom(intersection));
 		}
-		System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
-		return nextWindow.findTrack(nextWindow.tau ? nextX : h.next.length - nextX, 
-				distance + (double) g.distanceFrom(intersection));
 	}
 
 	public boolean contains(double x) { // x is given in "one" coordinates
 		
 		return (tau && b0 <= x + ExactAlgorithm.epsilon && x <= b1 + ExactAlgorithm.epsilon) 
-				|| (!tau && (pair.one.length - b1) <= x && x <=(pair.one.length - b0));
+				|| (!tau && (pair.one.length - b1) <= x + ExactAlgorithm.epsilon  && x <=(pair.one.length - b0)+ ExactAlgorithm.epsilon);
 	}
 
 }
