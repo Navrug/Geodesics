@@ -16,12 +16,19 @@ public class ExactAlgorithm
 	PriorityQueue<Window> queue = new PriorityQueue<Window>();
 	Vertex<Point_3> first, second;
 	static double epsilon = 10e-8;
-	
-	
+
+
 	public void setFirstPoint(Vertex<Point_3> first){
+		if (this.first != null)
+			this.first.extremum = false;
 		this.first = first; 
 	}
-	
+
+	public int getFirstId()
+	{
+		return first.index;
+	}
+
 	public void setSecondPoint(Vertex<Point_3> second){
 		if (this.second != null)
 			this.second.extremum = false;
@@ -62,10 +69,9 @@ public class ExactAlgorithm
 		Window w;
 		int orientation1 = GeometricOperations_2.orientation(source, b0Point, v1);
 		int orientation2 = GeometricOperations_2.orientation(source, b1Point, v1);
-		if(orientation1 == 0 || orientation2 == 0) // Case of perfectly aligned opposite, should not happen with doubles, does it?
-			throw new RuntimeException();
-		else if (orientation1 == 1) {
-			if (orientation2 == 1) { //Propagates fully in the first edge
+		assert(!(orientation1 == 0 && orientation2 == 0)); // this implies that b0==b1, impossible
+		if (orientation1 == 1) {
+			if (orientation2 >= 0) { //Propagates fully in the first edge
 				c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v0, v1));
 				c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v0, v1));
 				w = new Window(e.next, v.sigma,
@@ -86,17 +92,16 @@ public class ExactAlgorithm
 				addWindow(w, e.prev);
 			}
 		}
-		else
-			if(orientation2 == 1) //Impossible case
-				throw new RuntimeException();
-			else {// Propagate fully in the second edge
-				c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v1, v2));
-				c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v1, v2));
-				w = new Window(e.prev, v.sigma,
-						(double) c1.distanceFrom(v1), (double) c2.distanceFrom(v1),
-						(double) c1.distanceFrom(source), (double) c2.distanceFrom(source));
-				addWindow(w, e.prev);
-			}
+		else {
+			assert(orientation2 != 1);
+			// Propagate fully in the second edge
+			c1 = GeometricOperations_2.intersect(new Segment_2(source, b0Point), new Segment_2(v1, v2));
+			c2 = GeometricOperations_2.intersect(new Segment_2(source, b1Point), new Segment_2(v1, v2));
+			w = new Window(e.prev, v.sigma,
+					(double) c1.distanceFrom(v1), (double) c2.distanceFrom(v1),
+					(double) c1.distanceFrom(source), (double) c2.distanceFrom(source));
+			addWindow(w, e.prev);
+		}
 	}
 
 	/**
@@ -107,18 +112,18 @@ public class ExactAlgorithm
 	static Point_2 ofCircCoordinates(Point_2 a, Point_2 b, double d0, double d1, boolean sign)
 	{
 		assert((double) a.getY() == 0 && (double) b.getY() == 0);
-		assert((a.x - b.x < d0 + d1)&&(-a.x + b.x < d0 + d1));
+		assert((a.x - b.x < d0 + d1 + ExactAlgorithm.epsilon)&&(-a.x + b.x < d0 + d1 + ExactAlgorithm.epsilon));
 		double b0 = (double) a.getX();
 		double b1 = (double) b.getX();
 		Point_2 result = new Point_2();
-//		(b1-sx)2 + sy^2 = d1^2
-//		(b0-sx)2 + sy^2 = d0^2
-//		hence
-//		d1^2 - (b1-sx)2 = d0^2 - (b0-sx)2
-//		d1^2 - b1^2 +2*b1*sx = d0^2 - b0^2 +2*b0*sx
-//		so
+		//		(b1-sx)2 + sy^2 = d1^2
+		//		(b0-sx)2 + sy^2 = d0^2
+		//		hence
+		//		d1^2 - (b1-sx)2 = d0^2 - (b0-sx)2
+		//		d1^2 - b1^2 +2*b1*sx = d0^2 - b0^2 +2*b0*sx
+		//		so
 		double sx = ((d0*d0 - d1*d1 - b0*b0 + b1*b1)/(2*(b1 - b0)));
-//		System.out.println(sx);
+		//		System.out.println(sx);
 		if (sign)
 			result.setY(Math.sqrt(Math.abs(d1*d1-(b1 - sx)*(b1 - sx))));
 		else
@@ -127,16 +132,16 @@ public class ExactAlgorithm
 		//System.out.println("b0 = " + b0 + "; b1 = " + b1 + "; d0 = " + d0 + "; d1 = " + d1 + " => x = "+sx+"; y = "+result.y);
 		return result;
 	}
-	
+
 	/**
 	 * Function used to add the first three windows to the queue.
 	 */
 	private void initializeQueue(Point_2 source, Face<Point_3> face)
 	{
-		 
+
 	}
-	
-	
+
+
 	/**
 	 * Function used to add the first windows to the queue.
 	 */
@@ -152,7 +157,7 @@ public class ExactAlgorithm
 			queue.add(w);
 			temp = temp.getNext().getOpposite().getNext();
 		} while(temp != first);		
-		
+
 		//Adding the adjacent edges
 		first = v.getHalfedge();
 		temp = first;
@@ -163,18 +168,14 @@ public class ExactAlgorithm
 			temp = temp.getNext().getOpposite();
 		} while(temp != first);
 	}
-	
-	
+
+
 	/**
 	 * Main function for the exact algorithm. Directly modify the window information in the edges.
 	 */
 	public void compute()
 	{
-		if(first == null || second == null) {
-			System.out.println("Please define points first");
-			return;
-		}
-		initializeQueue(first);
+		computeInit();
 		Window current;
 		while (!queue.isEmpty()) {
 			System.out.println("----------------"); 
@@ -184,31 +185,35 @@ public class ExactAlgorithm
 			propagate(current);
 
 		}
-		
+
 	}
-	
+
 	public void computeInit()
 	{
-		if(first == null || second == null) {
-			System.out.println("Please define points first");
+		if(first == null) {
+			System.out.println("Please define source point first");
 			return;
 		}
 		initializeQueue(first);
 	}
-	
+
 	public void computeOne()
 	{
 		System.out.println("----------------"); 
+		if (queue.isEmpty()) {
+			System.out.println("Empty queue!");
+			return;
+		}
 		Window current = queue.poll();
 		current.display();
 		System.out.println("Distance " + current.distance());
-//		current.pair.one.getFace().color();
+		//		current.pair.one.getFace().color();
 		if (!current.valid && Math.abs(current.b1 - current.b0) < epsilon)
 			return;
 		propagate(current);
 	}
-	
-	
+
+
 	public void backtrack()
 	{
 		Halfedge<Point_3> first = second.getHalfedge();
@@ -242,18 +247,18 @@ public class ExactAlgorithm
 			temp = temp.getNext().getOpposite();
 		} while(temp != first);
 		double distance;
-//		if ((bestHalfhedge.getVertex() == second && !best.tau)
-//				|| (bestHalfhedge.getVertex() != second && best.tau))
-//				distance = best.findTrack(0, 0);
-//			else
-//				distance = best.findTrack(bestHalfhedge.length, 0);
+		//		if ((bestHalfhedge.getVertex() == second && !best.tau)
+		//				|| (bestHalfhedge.getVertex() != second && best.tau))
+		//				distance = best.findTrack(0, 0);
+		//			else
+		//				distance = best.findTrack(bestHalfhedge.length, 0);
 		if (best.tau)
-				distance = best.findTrack(bestX, 0);
-			else
-				distance = best.findTrack(bestHalfhedge.length - bestX, 0);
+			distance = best.findTrack(bestX, 0);
+		else
+			distance = best.findTrack(bestHalfhedge.length - bestX, 0);
 		System.out.println("The geodesic measures "+ distance ) ;
 	}
-	
+
 
 
 
@@ -262,7 +267,7 @@ public class ExactAlgorithm
 		Point_2 b = new Point_2(8,0);
 		Point_2 s = ofCircCoordinates(a, b, 5, Math.sqrt(32));
 		System.out.println(s.getX() + " " + s.getY());
- 
+
 		Vertex<Point_3> o = new Vertex<Point_3>(new Point_3(3, 4, 0));
 		Vertex<Point_3> v0 = new Vertex<Point_3>(new Point_3(0, 0, 0));
 		Vertex<Point_3> v1 = new Vertex<Point_3>(new Point_3(4, -4, 0));
@@ -303,10 +308,10 @@ public class ExactAlgorithm
 		h4.initialize();
 		h5.initialize();
 		h6.length = (double) ((Point_3) h6.vertex.getPoint()).distanceFrom((Point_3) h6.opposite.vertex.getPoint());
-		
+
 		h4.index = 4;
 		h5.index = 5;
-		
+
 		Window w = new Window(h2, 0, 1, 5, 4, Math.sqrt(32));
 		ExactAlgorithm algo = new ExactAlgorithm();
 		algo.queue.add(w);

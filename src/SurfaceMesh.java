@@ -1,3 +1,6 @@
+import geodesics.Window;
+import java.util.PriorityQueue;
+
 import Jcg.geometry.*;
 import Jcg.polyhedron.*;
 
@@ -230,7 +233,7 @@ public class SurfaceMesh {
 			}
 		}
 	}
-	
+
 	public void cleanPath()
 	{
 		for (Face<Point_3> f : polyhedron3D.facets) {
@@ -239,5 +242,18 @@ public class SurfaceMesh {
 		}
 	}
 
-
+	public void clean() {
+		for (Face<Point_3> f : polyhedron3D.facets) {
+			f.color = 0;
+			f.underPath = false;
+			f.path = null;
+		}
+		for (Halfedge<Point_3> h : polyhedron3D.halfedges) {
+			h.pair.color = 0;
+			h.pair.windows = new PriorityQueue<Window>();
+		}
+	}		
 }
+
+
+
