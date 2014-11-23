@@ -1,5 +1,6 @@
 package Jcg.polyhedron;
 
+import geodesics.ExactAlgorithm;
 import geodesics.Window;
 
 import java.util.ArrayList;
@@ -55,6 +56,9 @@ public class HalfedgePair {
 
 	public boolean addWindow(Window w)
 	{
+//		assert(w.b0 < w.b1 - ExactAlgorithm.epsilon);
+		if (w.b0 > w.b1 - ExactAlgorithm.epsilon)
+			return false;
 		int result;
 		ArrayList<Window> toRemove = new ArrayList<Window>();
 		w.convert();
@@ -98,17 +102,19 @@ public class HalfedgePair {
 			if (w.contains(x))
 				return w;
 		}
-		display();
 		return null;
 	}
 	
-	public boolean test(int n)
+	public int test(int n)
 	{
 		double dx = one.length/n;
 		for (int i = 0; i<=n; i++) {
 			if (getWindow(i*dx) == null)
-				return false;
+				return -1;
 		}
-		return true;
+		for (Window w : one.pair.windows)
+			if (w.sigma > 0)
+				return 1;
+		return 0;
 	}
 }

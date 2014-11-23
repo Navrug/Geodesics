@@ -61,7 +61,7 @@ public class SurfaceMesh {
 		float z1=(float)v.getPoint().getZ().doubleValue()*s;
 
 		if (v.extremum)
-			view.fill(0f,250f,0f);
+			view.fill(250f,250f,0f);
 		else
 			view.fill(0f,0f,250f);
 
@@ -163,6 +163,8 @@ public class SurfaceMesh {
 			Point_3 q=e.opposite.vertex.getPoint();
 			if (e.pair.color == -1)
 				view.stroke(0,255,255,255);
+			else if (e.pair.color == 1)
+				view.stroke(100,100,100,255);
 			else
 				view.stroke(0,0,0,255);
 			this.drawSegment(p, q); // draw edge (p,q)
@@ -227,8 +229,9 @@ public class SurfaceMesh {
 	public void checkEdges(int n)
 	{
 		for (Halfedge<Point_3> h : polyhedron3D.halfedges) {
-			if (!h.pair.test(n)) {
-				h.pair.color = -1;
+			int test = h.pair.test(n);
+			if (test != 0) {
+				h.pair.color = test;
 				h.pair.display();
 			}
 			else

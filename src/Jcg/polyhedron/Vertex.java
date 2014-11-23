@@ -1,5 +1,7 @@
 package Jcg.polyhedron;
 
+import geodesics.ExactAlgorithm;
+import geodesics.Window;
 import Jcg.geometry.*;
 
 
@@ -23,6 +25,85 @@ public boolean extremum = false;
     public String toString(){
         return "v"+point.toString();
     }
+	public boolean isSaddle() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	public double findBestTrack(double currentSigma)
+	{
+		@SuppressWarnings("unchecked")
+		Halfedge<Point_3> first = (Halfedge<Point_3>) getHalfedge();
+		Halfedge<Point_3> temp = first;
+		Halfedge<Point_3> bestHalfhedge = null;
+		Window best = null;
+		Window tempWindow;
+		double tempCos;
+		double bestCos = -1;
+		double bestX = -1;
+		do {
+			if (temp == temp.pair.one) { // temp is always pointing towards the vertex
+				tempWindow = temp.pair.getWindow(temp.length);
+				assert(tempWindow != null);
+				if (tempWindow.sigma >= currentSigma) {
+					temp = temp.getNext().getOpposite();
+					continue;
+				}
+				assert((!tempWindow.tau && tempWindow.b0 < ExactAlgorithm.epsilon)
+						|| (tempWindow.tau && tempWindow.b1 > temp.length - ExactAlgorithm.epsilon));
+//				if (tempWindow.sigma > bestSigma) MISTAKE
+//					continue;
+//				else if (tempWindow.sigma < bestSigma) {
+//					bestSigma = tempWindow.sigma;
+//					bestCos = -1;
+//					best = null;
+//				}
+				Point_2 b0Point = new Point_2(tempWindow.b0, 0);
+				Point_2 b1Point = new Point_2(tempWindow.b1, 0);
+				Point_2 source = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, tempWindow.d0, tempWindow.d1, true);
+				tempCos = tempWindow.tau ? 
+						ExactAlgorithm.cos(b1Point, b0Point, source) 
+						: ExactAlgorithm.cos(b0Point, b1Point, source);
+				if (best==null || tempCos > bestCos) {
+					bestCos = tempCos;
+					best = tempWindow;
+					bestHalfhedge = temp;
+					bestX = temp.length;
+				}
+			} else {
+				tempWindow = temp.pair.getWindow(0);
+				assert(tempWindow != null);
+				if (tempWindow.sigma >= currentSigma) {
+					temp = temp.getNext().getOpposite();
+					continue;
+				}
+				assert((tempWindow.tau && tempWindow.b0 < ExactAlgorithm.epsilon)
+						|| (!tempWindow.tau && tempWindow.b1 > temp.length - ExactAlgorithm.epsilon));
+//				if (tempWindow.sigma > bestSigma)
+//					continue;
+//				else if (tempWindow.sigma < bestSigma) {
+//					bestSigma = tempWindow.sigma;
+//					bestCos = -1;
+//					best = null;
+//				}
+				Point_2 b0Point = new Point_2(tempWindow.b0, 0);
+				Point_2 b1Point = new Point_2(tempWindow.b1, 0);
+				Point_2 source = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, tempWindow.d0, tempWindow.d1, true);
+				tempCos = tempWindow.tau ? 
+						ExactAlgorithm.cos(b0Point, b1Point, source) 
+						: ExactAlgorithm.cos(b1Point, b0Point, source);
+				if (best==null || tempCos > bestCos) {
+					bestCos = tempCos;
+					best = tempWindow;
+					bestHalfhedge = temp;
+					bestX = 0;
+				}				
+			}
+			temp = temp.getNext().getOpposite();
+		} while(temp != first);
+		assert(best != null);
+		return best.findTrack(best.tau ? bestX : bestHalfhedge.length - bestX, 0);
+	}
 }
 
 

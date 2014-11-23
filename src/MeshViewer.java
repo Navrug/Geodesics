@@ -17,14 +17,15 @@ public class MeshViewer extends PApplet {
 	ExactAlgorithm geodesics;
 	int renderType=0; // choice of type of rendering
 	int renderModes=3; // number of rendering modes
-	Random r = new Random(System.currentTimeMillis());
+//	Random r = new Random(System.currentTimeMillis());
+	Random r = new Random(0);
 
 
 	//String filename="OFF/high_genus.off";
-	String filename="OFF/sphere.off";
+	//String filename="OFF/sphere.off";
 	//String filename="OFF/cube.off";
 	//String filename="OFF/torus_33.off";
-	//String filename="OFF/tore.off";
+	String filename="OFF/tore.off";
 	//String filename="OFF/tri_hedra.off";
 	//String filename="OFF/letter_a.off";
 	//String filename="OFF/star.off";
@@ -99,6 +100,16 @@ public class MeshViewer extends PApplet {
 			id = r.nextInt(mesh.polyhedron3D.vertices.size()-1);
 			setFirstPoint(mesh.polyhedron3D.vertices.get(id));
 			geodesics.computeInit();
+			break;
+		}		
+		case('d'): {
+			mesh.clean();
+			id = r.nextInt(mesh.polyhedron3D.vertices.size()-1);
+			setFirstPoint(mesh.polyhedron3D.vertices.get(id));
+			geodesics.computeInit();
+
+			while(geodesics.computeOne())
+				draw();
 			break;
 		}
 		case('h'): {
