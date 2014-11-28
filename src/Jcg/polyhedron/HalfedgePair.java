@@ -74,8 +74,10 @@ public class HalfedgePair {
 				return false;
 		}
 		w.unConvert();
-		for (Window v : toRemove)
+		for (Window v : toRemove) {
 			windows.remove(v);
+			v.getHalfedge().getFace().color--;
+		}
 		//Retrieving the windows we should have had at this level, freeing the list for deeper additions
 		if (!toAdd.isEmpty()) {
 			System.out.println("#############################################");
@@ -88,6 +90,7 @@ public class HalfedgePair {
 		}
 		//Adding the argument, it could not overlap with any of the windows from the adding loop
 		windows.add(w);
+		w.getHalfedge().getFace().color();
 		return true;
 	}
 	

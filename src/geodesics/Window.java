@@ -30,10 +30,10 @@ public class Window implements Comparable<Window>
 		this.d1 = d1;
 		this.tau = tau;
 		this.converted = converted;
-		if(tau)
-			pair.one.getFace().color();
-		else
-			pair.two.getFace().color();
+//		if(tau)
+//			pair.one.getFace().color();
+//		else
+//			pair.two.getFace().color();
 
 	}
 
@@ -48,10 +48,10 @@ public class Window implements Comparable<Window>
 		this.d0 = d0;
 		this.d1 = d1;
 		tau = h.pair.one == h;
-		if(tau)
-			pair.one.getFace().color();
-		else
-			pair.two.getFace().color();
+//		if(tau)
+//			pair.one.getFace().color();
+//		else
+//			pair.two.getFace().color();
 
 	}
 

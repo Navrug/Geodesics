@@ -15,7 +15,8 @@ import Jcg.polyhedron.Vertex;
 public class ExactAlgorithm
 {
 	PriorityQueue<Window> queue = new PriorityQueue<Window>();
-	Vertex<Point_3> first, second;
+	public Vertex<Point_3> first;
+	public Vertex<Point_3> second;
 	public static double epsilon = 10e-8;
 
 
@@ -23,6 +24,7 @@ public class ExactAlgorithm
 		if (this.first != null)
 			this.first.extremum = false;
 		this.first = first; 
+		first.extremum = true;
 	}
 
 	public int getFirstId()
@@ -34,6 +36,7 @@ public class ExactAlgorithm
 		if (this.second != null)
 			this.second.extremum = false;
 		this.second = second; 
+		second.extremum = true;
 	}
 
 	/**
@@ -77,7 +80,7 @@ public class ExactAlgorithm
 			//assert(equalPoints(b0Point, source) || equalPoints(b1Point, source));
 			doublePropagation(v0, v1, v2, b0Point, b1Point, source, e, v);
 			return;
-		}
+		}h
 		if (source.y < ExactAlgorithm.epsilon) //Not sure how this can happen, but it does
 			return;
 		else if (orientation1 == 1) {
@@ -269,7 +272,6 @@ public class ExactAlgorithm
 		Window current = queue.poll();
 		current.display();
 		System.out.println("Distance " + current.distance());
-		//		current.pair.one.getFace().color();
 		if (!current.valid && Math.abs(current.b1 - current.b0) < epsilon)
 			return true;
 		propagate(current);

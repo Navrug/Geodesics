@@ -92,10 +92,11 @@ public class SurfaceMesh {
 
 		Point_3 u=h.getOpposite().getVertex().getPoint();
 		view.noStroke();
+		int nLevels = (int) Math.sqrt(polyhedron3D.vertices.size());
 		if (f.underPath)
 			view.fill(0,0,200,255);
 		else if(f.color >= 1)
-			view.fill(0,Math.max(50, (13-f.color)*20),0,255);
+			view.fill(0,Math.max(50, (nLevels-f.color)*205/nLevels),0,255);
 		else
 			view.fill(200,0,0,255); // color of the triangle
 
@@ -232,6 +233,10 @@ public class SurfaceMesh {
 			int test = h.pair.test(n);
 			if (test != 0) {
 				h.pair.color = test;
+				if (test == -1)
+					System.out.println("We have holes on");
+				else
+					System.out.println("There are pseudowindows on");
 				h.pair.display();
 			}
 			else

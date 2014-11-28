@@ -1,6 +1,7 @@
 package Jcg.polyhedron;
 
 import java.util.*;
+
 import Jcg.geometry.*;
 
 
@@ -390,7 +391,8 @@ public class Polyhedron_3<X extends Point_>{
  * of the new diagonal, the old face is to the left. 
  * The time is proportional to the distance from h to g around the facet. 
  */	    
-    public Halfedge<X> splitFacet(Halfedge<X> h, Halfedge<X> g) {
+    @SuppressWarnings("unchecked")
+	public Halfedge<X> splitFacet(Halfedge<X> h, Halfedge<X> g) {
     	if(h==null || g==null) {
     		throw new Error("splitFacet: null pointer");
     	}
@@ -414,6 +416,12 @@ public class Polyhedron_3<X extends Point_>{
 
 		Halfedge<X> newDiagonal=new Halfedge<X>();
 		Halfedge<X> oppositeNewDiagonal=new Halfedge<X>();
+		HalfedgePair newPair = new HalfedgePair(0, 0);
+		newPair.one = (Halfedge<Point_3>) newDiagonal;
+		newPair.two = (Halfedge<Point_3>) oppositeNewDiagonal;
+		newDiagonal.pair = newPair;
+		oppositeNewDiagonal.pair = newPair;
+		
 		Face<X> newFace=new Face<X>();
 
 		// set face incidence relations
@@ -459,7 +467,8 @@ public class Polyhedron_3<X extends Point_>{
     /**
      * splits the edge inserting a new vertex, with coordinates given by point. 
      */	    
-        public Halfedge<X> splitEdge(Halfedge<X> h, X point) {
+        @SuppressWarnings("unchecked")
+		public Halfedge<X> splitEdge(Halfedge<X> h, X point) {
         	if(h==null) {
         		throw new Error("splitFacet: null pointer");
         	}
@@ -471,6 +480,11 @@ public class Polyhedron_3<X extends Point_>{
     		// create the new edges, faces and vertex to be added
         	Halfedge<X> hNewLeft=new Halfedge<X>();
     		Halfedge<X> hNewRight=new Halfedge<X>();
+    		HalfedgePair newPair = new HalfedgePair(0, 0);
+    		newPair.one = (Halfedge<Point_3>) hNewLeft;
+    		newPair.two = (Halfedge<Point_3>) hNewRight;
+    		hNewLeft.pair = newPair;
+    		hNewRight.pair = newPair;
     		Vertex<X> newVertex=new Vertex<X>(point);
     		
     		// set the vertex incidence relations
