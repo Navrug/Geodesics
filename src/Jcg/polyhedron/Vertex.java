@@ -25,11 +25,7 @@ public boolean extremum = false;
     public String toString(){
         return "v"+point.toString();
     }
-	public boolean isSaddle() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
+    
 	public double findBestTrack(double currentSigma)
 	{
 		@SuppressWarnings("unchecked")
@@ -51,13 +47,6 @@ public boolean extremum = false;
 				}
 				assert((!tempWindow.tau && tempWindow.b0 < ExactAlgorithm.epsilon)
 						|| (tempWindow.tau && tempWindow.b1 > temp.length - ExactAlgorithm.epsilon));
-//				if (tempWindow.sigma > bestSigma) MISTAKE
-//					continue;
-//				else if (tempWindow.sigma < bestSigma) {
-//					bestSigma = tempWindow.sigma;
-//					bestCos = -1;
-//					best = null;
-//				}
 				Point_2 b0Point = new Point_2(tempWindow.b0, 0);
 				Point_2 b1Point = new Point_2(tempWindow.b1, 0);
 				Point_2 source = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, tempWindow.d0, tempWindow.d1, true);
@@ -79,13 +68,6 @@ public boolean extremum = false;
 				}
 				assert((tempWindow.tau && tempWindow.b0 < ExactAlgorithm.epsilon)
 						|| (!tempWindow.tau && tempWindow.b1 > temp.length - ExactAlgorithm.epsilon));
-//				if (tempWindow.sigma > bestSigma)
-//					continue;
-//				else if (tempWindow.sigma < bestSigma) {
-//					bestSigma = tempWindow.sigma;
-//					bestCos = -1;
-//					best = null;
-//				}
 				Point_2 b0Point = new Point_2(tempWindow.b0, 0);
 				Point_2 b1Point = new Point_2(tempWindow.b1, 0);
 				Point_2 source = ExactAlgorithm.ofCircCoordinates(b0Point, b1Point, tempWindow.d0, tempWindow.d1, true);

@@ -30,11 +30,6 @@ public class Window implements Comparable<Window>
 		this.d1 = d1;
 		this.tau = tau;
 		this.converted = converted;
-//		if(tau)
-//			pair.one.getFace().color();
-//		else
-//			pair.two.getFace().color();
-
 	}
 
 	public Window(Halfedge<Point_3> h, double sigma, double b0, double b1, double d0, double d1)
@@ -48,11 +43,6 @@ public class Window implements Comparable<Window>
 		this.d0 = d0;
 		this.d1 = d1;
 		tau = h.pair.one == h;
-//		if(tau)
-//			pair.one.getFace().color();
-//		else
-//			pair.two.getFace().color();
-
 	}
 
 	public void display()
@@ -129,7 +119,7 @@ public class Window implements Comparable<Window>
 	 */
 	private boolean overlapExists(Window w)
 	{
-		return (!(b1 <= w.b0 + ExactAlgorithm.epsilon || w.b1 <= b0 + ExactAlgorithm.epsilon));
+		return (!(b1 <= w.b0 - ExactAlgorithm.epsilon || w.b1 <= b0 - ExactAlgorithm.epsilon));
 	}
 
 	/**
@@ -274,20 +264,15 @@ public class Window implements Comparable<Window>
 			}
 		else {
 			overlapBoundary(w, data);
-//			assert(Math.abs(sigma + odp - w.sigma - wdp) < ExactAlgorithm.epsilon);
-			if (Math.abs(sigma + data.odp - w.sigma - data.wdp) > ExactAlgorithm.epsilon){
-				System.out.println(Math.abs(sigma + data.odp - w.sigma - data.wdp));
-				System.out.println(Math.abs(sigma + data.odp - w.sigma - data.wdp));
-			}
-
-			if (data.wD0 < data.oD0 + ExactAlgorithm.epsilon) { //Argument better on the left of p
+			assert(Math.abs(sigma + data.odp - w.sigma - data.wdp) < ExactAlgorithm.epsilon);
+			if (data.wD0 < data.oD0/* + ExactAlgorithm.epsilon*/) { //Argument better on the left of p
 				assert(data.oD1 < data.wD1 + ExactAlgorithm.epsilon);
 				if (b0 < data.delta0 - ExactAlgorithm.epsilon) { //Object goes further than argument on the left, double cut
 					Window left = new Window(pair, sigma, b0, w.b0, d0, data.oD0 - sigma, tau, converted);
 					left.unConvert();			
 					pair.addWindowLater(left);
 				}
-				if (w.b1 > data.delta1 + ExactAlgorithm.epsilon) {
+				if (w.b1 > data.delta1 + ExactAlgorithm.epsilon) {//Argument goes further than object on the left, double cut
 					Window right = new Window(w.pair, w.sigma, b1, w.b1, data.wD1 - w.sigma, w.d1, w.tau, w.converted);
 					right.unConvert();
 					pair.addWindowLater(right);
@@ -297,7 +282,7 @@ public class Window implements Comparable<Window>
 				w.b1 = data.p;
 				w.d1 = data.wdp;
 				return 0;
-			} else { assert(data.wD1 < data.oD1 + ExactAlgorithm.epsilon); //Argument better on the right of p
+			} else { assert(data.wD1 < data.oD1/* + ExactAlgorithm.epsilon*/); //Argument better on the right of p
 			if (w.b0 < data.delta0 - ExactAlgorithm.epsilon) {
 				Window left = new Window(w.pair, w.sigma, w.b0, data.delta0, w.d0, data.wD0 - w.sigma, w.tau, w.converted);
 				left.unConvert();			
@@ -323,20 +308,6 @@ public class Window implements Comparable<Window>
 		return (new Double(Math.min(d0, d1) + sigma));
 	}
 
-	@Override
-	public int hashCode()
-	{
-		return (new Double(distance())).hashCode();
-	}
-
-	@Override
-	public boolean equals(Object o)
-	{
-		if (!(o instanceof Window))
-			return false;
-		Window w = (Window) o;
-		return new Double(distance()).equals(w.distance());
-	}
 
 	@Override
 	public int compareTo(Window w)
@@ -362,17 +333,17 @@ public class Window implements Comparable<Window>
 			h.face.setPath(h, x, h.prev, h.prev.length);
 			if (sigma == 0)
 				return distance + (double) g.distanceFrom(s);
-			return distance + h.getOpposite().getVertex().findBestTrack(sigma);
+			return distance + (double) g.distanceFrom(s) + h.getOpposite().getVertex().findBestTrack(sigma);
 		} else if (ExactAlgorithm.equalPoints(s, v1)) {
 			h.face.setPath(h, x, h.next, 0);
 			if (sigma == 0)
 				return distance + (double) g.distanceFrom(s);
-			return distance + h.getVertex().findBestTrack(sigma);
+			return distance + (double) g.distanceFrom(s) + h.getVertex().findBestTrack(sigma);
 		} else if (ExactAlgorithm.equalPoints(s, v2)) {
 			h.face.setPath(h, x, null, -1);
 			if (sigma == 0)
 				return distance + (double) g.distanceFrom(s);
-			return distance + h.getNext().getVertex().findBestTrack(sigma);
+			return distance + (double) g.distanceFrom(s) + h.getNext().getVertex().findBestTrack(sigma);
 		}
 
 		Window nextWindow;
@@ -386,7 +357,7 @@ public class Window implements Comparable<Window>
 			nextX = h.prev == h.prev.pair.one ? h.prev.length - nextX : nextX;
 			nextWindow = h.prev.pair.getWindow(nextX);
 			assert(nextWindow != null);
-			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
+//			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
 			return nextWindow.findTrack(nextWindow.tau ? nextX : h.prev.length - nextX, 
 					distance + (double) g.distanceFrom(intersection));
 		} else {
@@ -396,7 +367,7 @@ public class Window implements Comparable<Window>
 			nextX = h.next == h.next.pair.one ? nextX : h.next.length - nextX;
 			nextWindow = h.next.pair.getWindow(nextX);	
 			assert(nextWindow != null);
-			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
+//			System.out.println("Current distance in edge " + (tau ? pair.one.index : pair.two.index) + " is " + distance);
 			return nextWindow.findTrack(nextWindow.tau ? nextX : h.next.length - nextX, 
 					distance + (double) g.distanceFrom(intersection));
 		}

@@ -18,11 +18,6 @@ public class Face<X extends Point_>{
 		color++;
 	}
 
-	//    public boolean isColored()
-	//    {
-	//    	return colored;
-	//    }
-
 	public int degree() {
 		Halfedge<X> e,p;
 		if(this.halfedge==null) return 0;

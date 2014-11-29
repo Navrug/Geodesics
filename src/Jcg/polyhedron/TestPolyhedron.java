@@ -25,9 +25,6 @@ public class TestPolyhedron {
     	System.out.println(planarGraph.verticesToString());   	
     	System.out.println(planarGraph.facesToString());
     	planarGraph.isValid(false);
-    	
-   	//Fenetre f=new Fenetre();
-    	//f.addPolyhedronEdges(planarGraph);
     }
 
 	/**

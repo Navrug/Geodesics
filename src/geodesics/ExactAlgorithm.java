@@ -14,7 +14,7 @@ import Jcg.polyhedron.Vertex;
 
 public class ExactAlgorithm
 {
-	PriorityQueue<Window> queue = new PriorityQueue<Window>();
+	private PriorityQueue<Window> queue = new PriorityQueue<Window>();
 	public Vertex<Point_3> first;
 	public Vertex<Point_3> second;
 	public static double epsilon = 10e-8;
@@ -25,6 +25,7 @@ public class ExactAlgorithm
 			this.first.extremum = false;
 		this.first = first; 
 		first.extremum = true;
+		System.out.println("Set vertex " + first.index + " as first point.");
 	}
 
 	public int getFirstId()
@@ -37,6 +38,7 @@ public class ExactAlgorithm
 			this.second.extremum = false;
 		this.second = second; 
 		second.extremum = true;
+		System.out.println("Set vertex " + second.index + " as second point.");
 	}
 
 	/**
@@ -47,7 +49,7 @@ public class ExactAlgorithm
 	{
 		boolean result = h.pair.addWindow(w);
 		if (result) {
-			w.display();
+//			w.display();
 			queue.add(w);
 		}
 		return result;
@@ -80,7 +82,7 @@ public class ExactAlgorithm
 			//assert(equalPoints(b0Point, source) || equalPoints(b1Point, source));
 			doublePropagation(v0, v1, v2, b0Point, b1Point, source, e, v);
 			return;
-		}h
+		}
 		if (source.y < ExactAlgorithm.epsilon) //Not sure how this can happen, but it does
 			return;
 		else if (orientation1 == 1) {
@@ -170,7 +172,7 @@ public class ExactAlgorithm
 
 	/**
 	 * Function used to convert a point memorized in circular coordinates
-	 * into Cartesian coordinates with signe(y) = sign.
+	 * into Cartesian coordinates with sign(y) = sign.
 	 * @return a new point with such coordinates.
 	 */
 	public static Point_2 ofCircCoordinates(Point_2 a, Point_2 b, double d0, double d1, boolean sign)
@@ -187,44 +189,23 @@ public class ExactAlgorithm
 		//		d1^2 - b1^2 +2*b1*sx = d0^2 - b0^2 +2*b0*sx
 		//		so
 		double sx = ((d0*d0 - d1*d1 - b0*b0 + b1*b1)/(2*(b1 - b0)));
-		//		System.out.println(sx);
 		if (sign)
 			result.setY(Math.sqrt(Math.abs(d1*d1-(b1 - sx)*(b1 - sx))));
 		else
 			result.setY(-Math.sqrt(Math.abs(d1*d1-(b1 - sx)*(b1 - sx))));
 		result.setX(sx);
-		//System.out.println("b0 = " + b0 + "; b1 = " + b1 + "; d0 = " + d0 + "; d1 = " + d1 + " => x = "+sx+"; y = "+result.y);
 		return result;
 	}
 
-	/**
-	 * Function used to add the first three windows to the queue.
-	 */
-	private void initializeQueue(Point_2 source, Face<Point_3> face)
-	{
-
-	}
-
-
+	
 	/**
 	 * Function used to add the first windows to the queue.
 	 */
 	private void initializeQueue(Vertex<Point_3> v)
 	{
-		//Adding the opposite edges
-		Halfedge<Point_3> first = v.getHalfedge().getOpposite().getNext();
-		Halfedge<Point_3> temp = first;
-		//		do {
-		//			Window w = new Window(temp, 0, 0, temp.length, temp.prev.length, temp.next.length);
-		//			w.first = true;
-		//			temp.pair.addWindow(w);
-		//			queue.add(w);
-		//			temp = temp.getNext().getOpposite().getNext();
-		//		} while(temp != first);		
-
 		//Adding the adjacent edges
-		first = v.getHalfedge();
-		temp = first;
+		Halfedge<Point_3> first = v.getHalfedge();
+		Halfedge<Point_3> temp = first;
 		do {
 			Window w = new Window(temp, 0, 0, temp.length, temp.length, 0);
 			w.first = true;
@@ -243,14 +224,11 @@ public class ExactAlgorithm
 		computeInit();
 		Window current;
 		while (!queue.isEmpty()) {
-			System.out.println("----------------"); 
 			current = queue.poll();
 			if (!current.valid && Math.abs(current.b1 - current.b0) < epsilon)
 				continue;
 			propagate(current);
-
 		}
-
 	}
 
 	public void computeInit()
@@ -263,14 +241,12 @@ public class ExactAlgorithm
 	}
 
 	public boolean computeOne()
-	{
-		System.out.println("----------------"); 
+	{ 
 		if (queue.isEmpty()) {
 			System.out.println("Empty queue!");
 			return false;
 		}
 		Window current = queue.poll();
-		current.display();
 		System.out.println("Distance " + current.distance());
 		if (!current.valid && Math.abs(current.b1 - current.b0) < epsilon)
 			return true;
@@ -294,121 +270,10 @@ public class ExactAlgorithm
 
 	public void backtrack()
 	{
-//		Halfedge<Point_3> first = second.getHalfedge();
-//		Halfedge<Point_3> temp = first;
-//		Halfedge<Point_3> bestHalfhedge = null;
-//		Window best = null;
-//		Window tempWindow;
-//		double tempCos;
-//		double bestCos = -1;
-//		double bestX = -1;
-//		do {
-//			if (temp == temp.pair.one) {
-//				tempWindow = temp.pair.getWindow(temp.length);
-//				assert(tempWindow != null);
-//				assert((!tempWindow.tau && tempWindow.b0 < ExactAlgorithm.epsilon)
-//						|| (tempWindow.tau && tempWindow.b1 > temp.length - ExactAlgorithm.epsilon));
-//				Point_2 b0Point = new Point_2(tempWindow.b0, 0);
-//				Point_2 b1Point = new Point_2(tempWindow.b1, 0);
-//				Point_2 source = ofCircCoordinates(b0Point, b1Point, tempWindow.d0, tempWindow.d1, true);
-//				tempCos = tempWindow.tau ? cos(b1Point, b0Point, source) : cos(b0Point, b1Point, source);
-//				if (best==null || tempCos > bestCos) {
-//					bestCos = tempCos;
-//					best = tempWindow;
-//					bestHalfhedge = temp;
-//					bestX = temp.length;
-//				}
-//			} else {
-//				tempWindow = temp.pair.getWindow(0);
-//				assert(tempWindow != null);
-//				assert((tempWindow.tau && tempWindow.b0 < ExactAlgorithm.epsilon)
-//						|| (!tempWindow.tau && tempWindow.b1 > temp.length - ExactAlgorithm.epsilon));
-//				Point_2 b0Point = new Point_2(tempWindow.b0, 0);
-//				Point_2 b1Point = new Point_2(tempWindow.b1, 0);
-//				Point_2 source = ofCircCoordinates(b0Point, b1Point, tempWindow.d0, tempWindow.d1, true);
-//				tempCos = tempWindow.tau ? cos(b0Point, b1Point, source) : cos(b1Point, b0Point, source);
-//				if (best==null || tempCos > bestCos) {
-//					bestCos = tempCos;
-//					best = tempWindow;
-//					bestHalfhedge = temp;
-//					bestX = 0;
-//				}				
-//			}
-//			temp = temp.getNext().getOpposite();
-//		} while(temp != first);
-//		double distance = best.findTrack(best.tau ? bestX : bestHalfhedge.length - bestX, 0);
 		double distance = second.findBestTrack(Double.MAX_VALUE);
 		System.out.println("The geodesic measures "+ distance ) ;
 	}
 
-
-
-
-	/*static public void main(String[] args){
-		Point_2 a = new Point_2(1,0);
-		Point_2 b = new Point_2(8,0);
-		Point_2 s = ofCircCoordinates(a, b, 5, Math.sqrt(32));
-		System.out.println(s.getX() + " " + s.getY());
-
-		Vertex<Point_3> o = new Vertex<Point_3>(new Point_3(3, 4, 0));
-		Vertex<Point_3> v0 = new Vertex<Point_3>(new Point_3(0, 0, 0));
-		Vertex<Point_3> v1 = new Vertex<Point_3>(new Point_3(4, -4, 0));
-		Vertex<Point_3> v2 = new Vertex<Point_3>(new Point_3(7, 0, 0));
-		Halfedge<Point_3> h0 = new Halfedge<Point_3>();
-		h0.vertex = v0;
-		Halfedge<Point_3> h1 = new Halfedge<Point_3>();
-		h1.vertex = o;
-		Halfedge<Point_3> h2 = new Halfedge<Point_3>();
-		h2.vertex = v2;
-		Halfedge<Point_3> h3 = new Halfedge<Point_3>();
-		h3.vertex = v0;
-		Halfedge<Point_3> h4 = new Halfedge<Point_3>();
-		h4.vertex = v1;
-		Halfedge<Point_3> h5 = new Halfedge<Point_3>();
-		h5.vertex = v2;
-		h0.prev = h1;
-		h1.next = h0;
-		h1.prev = h2;
-		h2.next = h1;
-		h2.prev = h0;
-		h0.next = h2;
-		h3.prev = h5;
-		h5.next = h3;
-		h5.prev = h4;
-		h4.next = h5;
-		h4.prev = h3;
-		h3.next = h4;
-		h2.opposite = h3;
-		h3.opposite = h2;
-		Halfedge<Point_3> h6 = new Halfedge<Point_3>();
-		h6.vertex = o;
-		h6.opposite = h0;
-		h0.initialize();
-		h1.initialize();
-		h2.initialize();
-		h3.initialize();
-		h4.initialize();
-		h5.initialize();
-		h6.length = (double) ((Point_3) h6.vertex.getPoint()).distanceFrom((Point_3) h6.opposite.vertex.getPoint());
-
-		h4.index = 4;
-		h5.index = 5;
-
-		Window w = new Window(h2, 0, 1, 5, 4, Math.sqrt(32));
-		ExactAlgorithm algo = new ExactAlgorithm();
-		algo.queue.add(w);
-		algo.propagate(w);
-		for(Window v : h4.windows)
-			v.display();
-		for(Window v : h5.windows)
-			v.display();
-		Window w2 = new Window(h2, 0, 3.5, 6, Math.sqrt(32), 4);
-		algo.propagate(w2);
-		for(Window v : h4.windows)
-			v.display();
-		for(Window v : h5.windows)
-			v.display();
-	}*/
 }
 
 

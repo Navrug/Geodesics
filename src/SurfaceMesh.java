@@ -1,4 +1,6 @@
 import geodesics.Window;
+
+import java.util.HashSet;
 import java.util.PriorityQueue;
 
 import Jcg.geometry.*;
@@ -233,11 +235,11 @@ public class SurfaceMesh {
 			int test = h.pair.test(n);
 			if (test != 0) {
 				h.pair.color = test;
-				if (test == -1)
-					System.out.println("We have holes on");
-				else
-					System.out.println("There are pseudowindows on");
-				h.pair.display();
+//				if (test == -1)
+//					System.out.println("We have holes on");
+//				else
+//					System.out.println("There are pseudowindows on");
+//				h.pair.display();
 			}
 			else
 				h.pair.color = 0;
@@ -260,7 +262,7 @@ public class SurfaceMesh {
 		}
 		for (Halfedge<Point_3> h : polyhedron3D.halfedges) {
 			h.pair.color = 0;
-			h.pair.windows = new PriorityQueue<Window>();
+			h.pair.resetWindows();
 		}
 	}		
 }

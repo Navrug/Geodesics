@@ -28,8 +28,6 @@ public class Halfedge<X extends Point_>{
 	public int index = 0;
 
 	public double length;
-//	public HashSet<Window> windows = new HashSet<Window>();;
-//	public boolean colored = false;
 
 	public void setNext(Halfedge<X> e) { this.next=e; }
 	public void setOpposite(Halfedge<X> e) { this.opposite=e; }
@@ -38,7 +36,6 @@ public class Halfedge<X extends Point_>{
 	public void setFace(Face<X> f) { this.face=f; }
 	public void computeLength()
 	{
-//		length = (double) ((Point_3) vertex.getPoint()).distanceFrom((Point_3) opposite.vertex.getPoint());
 		length = (double) ((Point_3) vertex.getPoint()).distanceFrom((Point_3) prev.vertex.getPoint());
 	}
 	public void initialize()
@@ -61,29 +58,6 @@ public class Halfedge<X extends Point_>{
 		return "("+opposite.getVertex().getPoint()+" - "+vertex.getPoint()+")";
 	}
 
-	/**
-	 * Adds a new window to edge, check and correct overlapping
-	 * @param w
-	 * @return whether the window was added
-	 */
-//	public boolean addWindow(Window w)
-//	{
-//		int result;
-//		ArrayList<Window> toRemove = new ArrayList<Window>();
-//		for(Window v : windows) {
-//			result = w.overlap(v);
-//			if (result == 1) {
-//				toRemove.add(v);
-//				v.valid = false;
-//			}
-//			if (result == -1)
-//				return false;
-//		}
-//		for (Window v : toRemove)
-//			windows.remove(v);
-//		windows.add(w);
-//		return true;
-//	}
 	
 	@SuppressWarnings("unchecked")
 	public void setFirst(HalfedgePair p)

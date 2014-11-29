@@ -16,7 +16,7 @@ public class HalfedgePair {
 	int first, second;
 	public Halfedge<Point_3> one;
 	public Halfedge<Point_3> two;
-	public PriorityQueue<Window> windows = new PriorityQueue<Window>();
+	private HashSet<Window> windows = new HashSet<Window>();
 	private ArrayList<Window> toAdd = new ArrayList<>();
 	public int color;
 
@@ -46,7 +46,10 @@ public class HalfedgePair {
 			w.display();
 	}
 	
-	
+	public void resetWindows()
+	{
+		windows = new HashSet<Window>();
+	}
 
 	public void addWindowLater(Window w)
 	{
@@ -56,9 +59,7 @@ public class HalfedgePair {
 
 	public boolean addWindow(Window w)
 	{
-//		assert(w.b0 < w.b1 - ExactAlgorithm.epsilon);
-		if (w.b0 > w.b1 - ExactAlgorithm.epsilon)
-			return false;
+		assert(w.b0 < w.b1 + ExactAlgorithm.epsilon);
 		int result;
 		ArrayList<Window> toRemove = new ArrayList<Window>();
 		w.convert();
@@ -80,9 +81,7 @@ public class HalfedgePair {
 		}
 		//Retrieving the windows we should have had at this level, freeing the list for deeper additions
 		if (!toAdd.isEmpty()) {
-			System.out.println("#############################################");
-			System.out.println("# There are    "+toAdd.size()+"   doubles #");
-			System.out.println("#############################################");
+//			System.out.println("# There are    "+toAdd.size()+"   doubles #");
 			ArrayList<Window> toAddNow = toAdd;
 			toAdd = new ArrayList<Window>();
 			for (Window v : toAddNow)
